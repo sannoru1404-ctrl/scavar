@@ -258,6 +258,26 @@ bool UScavarWorldSave::TakeCharacterState(const FString& AccountKey, FVector& Ou
 	return true;
 }
 
+void UScavarWorldSave::SaveValue(const FString& Key, const FString& Value)
+{
+	if (!bOpened) { return; }
+	std::string Error;
+	Database.SetState("value:" + ToStd(Key), ToStd(Value), &Error);
+}
+
+bool UScavarWorldSave::LoadValue(const FString& Key, FString& OutValue) const
+{
+	if (!bOpened) { return false; }
+	std::string Value, Error;
+	// GetState is not const (it prepares statements), but it does not change observable state.
+	if (const_cast<Scavar::Db&>(Database).GetState("value:" + ToStd(Key), &Value, &Error))
+	{
+		OutValue = FString(UTF8_TO_TCHAR(Value.c_str()));
+		return true;
+	}
+	return false;
+}
+
 void UScavarWorldSave::SaveAllNow()
 {
 	if (!bOpened) { return; }

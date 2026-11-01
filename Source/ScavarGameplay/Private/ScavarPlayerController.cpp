@@ -1,6 +1,7 @@
 #include "ScavarPlayerController.h"
 #include "ScavarCharacter.h"
 #include "ScavarCollision.h"
+#include "ScavarGameState.h"
 #include "ScavarInventoryComponent.h"
 #include "ScavarLoot.h"
 #include "ScavarLog.h"
@@ -175,6 +176,19 @@ void AScavarPlayerController::ServerLootCycle_Implementation()
 		if (UScavarLootSubsystem* Loot = GetWorld()->GetSubsystem<UScavarLootSubsystem>())
 		{
 			Loot->RunCycleNow();
+		}
+	}
+}
+
+void AScavarPlayerController::ScavarSetHour(float Hour) { ServerSetHour(Hour); }
+
+void AScavarPlayerController::ServerSetHour_Implementation(float Hour)
+{
+	if (CheatsAllowed() && GetWorld())
+	{
+		if (AScavarGameState* State = GetWorld()->GetGameState<AScavarGameState>())
+		{
+			State->DebugSetHour(Hour);
 		}
 	}
 }

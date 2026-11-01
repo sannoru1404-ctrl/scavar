@@ -1,5 +1,6 @@
 #include "ScavarHUD.h"
 #include "ScavarCharacter.h"
+#include "ScavarGameState.h"
 #include "ScavarInventoryComponent.h"
 #include "ScavarPickup.h"
 #include "ScavarPlayerController.h"
@@ -56,6 +57,13 @@ void AScavarHUD::DrawHUD()
 	else
 	{
 		DrawLine(TEXT("No weapon in hand: press the number of a weapon item to take it."), FLinearColor::Gray);
+	}
+
+	if (const AScavarGameState* State = GetWorld()->GetGameState<AScavarGameState>())
+	{
+		const float Hour = State->GetHourOfDay();
+		DrawLine(FString::Printf(TEXT("%02d:%02d  %s  %.0f C"), (int32)Hour, (int32)((Hour - (int32)Hour) * 60.f),
+			State->IsNight() ? TEXT("night") : TEXT("day"), State->GetAmbientTemperatureC()), FLinearColor(0.6f, 0.8f, 1.f));
 	}
 
 	const UScavarInventoryComponent* Inventory = Character->GetInventory();

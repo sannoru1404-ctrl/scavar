@@ -66,7 +66,9 @@ def main():
     ground.set_actor_scale3d(unreal.Vector(SQUARE_CM / 100.0, SQUARE_CM / 100.0, 1.0))
 
     # lighting
-    spawn(unreal.DirectionalLight, (0, 0, 1000), unreal.Rotator(0, -45, 30), "Sun")
+    sun = spawn(unreal.DirectionalLight, (0, 0, 1000), unreal.Rotator(0, -45, 30), "Sun")
+    sun.root_component.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
+    sun.tags = [unreal.Name("Sun")]
     spawn(unreal.SkyAtmosphere, (0, 0, 0), label="SkyAtmosphere")
     spawn(unreal.SkyLight, (0, 0, 500), label="SkyLight")
 

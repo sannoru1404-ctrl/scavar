@@ -34,6 +34,10 @@ public:
 
 	void SaveAllNow();
 
+	/** Generic persistent text values ("clock", ...). Server only. */
+	void SaveValue(const FString& Key, const FString& Value);
+	bool LoadValue(const FString& Key, FString& OutValue) const;
+
 private:
 	bool InitializeWhenInventoryReady();
 	void RestorePickups();

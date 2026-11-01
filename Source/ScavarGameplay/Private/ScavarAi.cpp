@@ -1,5 +1,6 @@
 #include "ScavarAi.h"
 #include "ScavarCharacter.h"
+#include "ScavarGameState.h"
 #include "ScavarLog.h"
 #include "ScavarVitalsComponent.h"
 #include "ScavarWorldInventory.h"
@@ -292,7 +293,8 @@ void UScavarAiSubsystem::TickNpcs(float Dt, double Now)
 
 	Scavar::AiWorldView View;
 	View.Time = Now;
-	View.Night = false; // wired to the world clock in the next milestone
+	const AScavarGameState* State = GetWorld()->GetGameState<AScavarGameState>();
+	View.Night = State && State->IsNight();
 	View.Targets = std::move(Targets);
 	View.Sounds = PendingSounds;
 	UWorld* UnrealWorld = GetWorld();

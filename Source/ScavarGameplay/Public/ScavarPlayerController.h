@@ -25,6 +25,7 @@ public:
 	UFUNCTION(Exec) void ScavarKill();
 	UFUNCTION(Exec) void ScavarHeal();
 	UFUNCTION(Exec) void ScavarLootCycle();
+	UFUNCTION(Exec) void ScavarSetHour(float Hour);
 
 protected:
 	UFUNCTION(Server, Reliable) void ServerGive(FName DefId, int32 Qty);
@@ -32,6 +33,7 @@ protected:
 	UFUNCTION(Server, Reliable) void ServerKill();
 	UFUNCTION(Server, Reliable) void ServerHeal();
 	UFUNCTION(Server, Reliable) void ServerLootCycle();
+	UFUNCTION(Server, Reliable) void ServerSetHour(float Hour);
 
 	void FirePressed();
 	void FireReleased();
