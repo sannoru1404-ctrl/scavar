@@ -13,6 +13,7 @@ public class ScavarPersistence : ModuleRules
 
 		// SQLite amalgamation (public domain) is vendored by tools/fetch_sqlite.ps1 into ThirdParty/sqlite.
 		string SqliteDir = Path.Combine(ModuleDirectory, "ThirdParty", "sqlite");
+		PublicIncludePaths.Add(ModuleDirectory);
 		PublicIncludePaths.Add(SqliteDir);
 		PublicDefinitions.Add("SQLITE_THREADSAFE=1");
 		PublicDefinitions.Add("SQLITE_OMIT_LOAD_EXTENSION=1");

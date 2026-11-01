@@ -96,6 +96,52 @@ void Db::SetError(std::string* err, const char* context) const
     *err = std::string(context) + ": " + (Handle ? sqlite3_errmsg(Handle) : "database not open");
 }
 
+bool Db::SetState(const std::string& key, const std::string& value, std::string* err)
+{
+    Stmt s(Handle, "INSERT INTO world_state(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value");
+    if (!s.Ok()) { SetError(err, "prepare SetState"); return false; }
+    s.Text(1, key);
+    s.Text(2, value);
+    if (!s.Run()) { SetError(err, "SetState"); return false; }
+    return true;
+}
+
+bool Db::GetState(const std::string& key, std::string* value, std::string* err)
+{
+    Stmt s(Handle, "SELECT value FROM world_state WHERE key=?1");
+    if (!s.Ok()) { SetError(err, "prepare GetState"); return false; }
+    s.Text(1, key);
+    const int rc = sqlite3_step(s.S);
+    if (rc == SQLITE_ROW)
+    {
+        if (value) *value = reinterpret_cast<const char*>(sqlite3_column_text(s.S, 0));
+        return true;
+    }
+    if (rc != SQLITE_DONE) SetError(err, "GetState");
+    return false;
+}
+
+bool Db::DeleteState(const std::string& key, std::string* err)
+{
+    Stmt s(Handle, "DELETE FROM world_state WHERE key=?1");
+    if (!s.Ok()) { SetError(err, "prepare DeleteState"); return false; }
+    s.Text(1, key);
+    if (!s.Run()) { SetError(err, "DeleteState"); return false; }
+    return true;
+}
+
+bool Db::ListState(const std::string& keyPrefix, std::map<std::string, std::string>* out, std::string* err)
+{
+    Stmt s(Handle, "SELECT key,value FROM world_state WHERE substr(key,1,length(?1))=?1 ORDER BY key");
+    if (!s.Ok()) { SetError(err, "prepare ListState"); return false; }
+    s.Text(1, keyPrefix);
+    int rc;
+    while ((rc = sqlite3_step(s.S)) == SQLITE_ROW)
+        (*out)[reinterpret_cast<const char*>(sqlite3_column_text(s.S, 0))] = reinterpret_cast<const char*>(sqlite3_column_text(s.S, 1));
+    if (rc != SQLITE_DONE) { SetError(err, "ListState"); return false; }
+    return true;
+}
+
 bool Db::Exec(const std::string& sql, std::string* err)
 {
     if (!Handle) { if (err) *err = "database not open"; return false; }

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include "TestFramework.h"
 #include "Db.h"
 #include "Inventory.h"
@@ -274,4 +275,33 @@ TEST(AT036_DeathResolutionSurvivesPersistenceRoundTrip)
     CHECK(r.Equals(s));
     CHECK(r.GetContainer(secure) == nullptr);
     CHECK(r.GetContainer(bag)->Kind == ContainerKind::Corpse);
+}
+
+TEST(Db_WorldStateKeyValueRoundTrip)
+{
+    const std::string path = "/tmp/scavar_kv_test.sqlite";
+    std::remove(path.c_str()); std::remove((path + "-wal").c_str()); std::remove((path + "-shm").c_str());
+    Db db; std::string err;
+    CHECK(db.Open(path, &err));
+    std::string v;
+    CHECK(!db.GetState("pickup:1", &v, &err));                     // missing key
+    CHECK(db.SetState("pickup:1", "1.5,2.5,3.5", &err));
+    CHECK(db.SetState("pickup:2", "x", &err));
+    CHECK(db.SetState("char:77", "state", &err));
+    CHECK(db.SetState("pickup:1", "9,9,9", &err));                 // overwrite
+    CHECK(db.GetState("pickup:1", &v, &err));
+    CHECK_EQ(v, std::string("9,9,9"));
+    std::map<std::string, std::string> pickups;
+    CHECK(db.ListState("pickup:", &pickups, &err));
+    CHECK_EQ(pickups.size(), size_t(2));
+    CHECK(db.DeleteState("pickup:2", &err));
+    pickups.clear();
+    CHECK(db.ListState("pickup:", &pickups, &err));
+    CHECK_EQ(pickups.size(), size_t(1));
+    db.Close();
+    CHECK(db.Open(path, &err));                                    // survives reopen
+    CHECK(db.GetState("char:77", &v, &err));
+    CHECK_EQ(v, std::string("state"));
+    db.Close();
+    std::remove(path.c_str()); std::remove((path + "-wal").c_str()); std::remove((path + "-shm").c_str());
 }

@@ -2,6 +2,7 @@
 #include "ScavarVitalsComponent.h"
 #include "ScavarInventoryComponent.h"
 #include "ScavarWeaponComponent.h"
+#include "ScavarWorldSave.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
@@ -63,6 +64,23 @@ void AScavarCharacter::PossessedBy(AController* NewController)
 		Key = State->GetUniqueId().IsValid() ? State->GetUniqueId().ToString() : State->GetPlayerName();
 	}
 	Inventory->InitializeForPlayer(Key, /*bGiveStarterKit=*/true);
+
+	// A living character from the save comes back where it was; a fresh life discards any stale record.
+	if (UScavarWorldSave* Save = GetWorld()->GetSubsystem<UScavarWorldSave>())
+	{
+		FVector Location;
+		float Yaw = 0.f;
+		FString VitalsText;
+		if (Inventory->WasRestored() && Save->TakeCharacterState(Key, Location, Yaw, VitalsText))
+		{
+			SetActorLocationAndRotation(Location, FRotator(0.f, Yaw, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
+			Vitals->ImportSave(VitalsText);
+		}
+		else
+		{
+			Save->ForgetCharacter(Key);
+		}
+	}
 }
 
 void AScavarCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -189,7 +207,12 @@ void AScavarCharacter::HandleDied(AActor* /*Victim*/)
 
 	if (HasAuthority())
 	{
+		const FString AccountKey = Inventory->GetAccountKey();
 		Inventory->HandleOwnerDied();
+		if (UScavarWorldSave* Save = GetWorld()->GetSubsystem<UScavarWorldSave>())
+		{
+			Save->ForgetCharacter(AccountKey);
+		}
 		SetLifeSpan(BodyLifetimeSeconds);
 		AController* DeadController = GetController();
 		if (DeadController)

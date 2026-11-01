@@ -14,6 +14,8 @@ public:
 	AScavarGameMode();
 
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	/** Puts the weapon away and saves the character before it leaves the world. */
+	virtual void Logout(AController* Exiting) override;
 
 	/** 300 m (TUNABLE, SYS-01 / docs/03). Unreal units are centimeters. */
 	UPROPERTY(EditDefaultsOnly, Category = "Scavar|Spawn")

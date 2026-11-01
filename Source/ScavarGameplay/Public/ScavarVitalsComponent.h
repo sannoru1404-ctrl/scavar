@@ -84,6 +84,9 @@ public:
 	/** First wounded zone that the given treatment can fix, for quick-use without choosing a body part. */
 	bool FindTreatableZone(EScavarTreatment Kind, EScavarHitZone& OutZone) const;
 	bool IsTreating() const { return bTreating; }
+	/** Server: compact text form of health, wounds and needs, for saving (SYS-12). */
+	FString ExportSave() const;
+	bool ImportSave(const FString& Text);
 	/** Development only: full health, no wounds, full needs. Not available for dead characters. */
 	void DebugRestoreAll();
 

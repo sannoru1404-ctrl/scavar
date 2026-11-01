@@ -2,6 +2,9 @@
 #include "ScavarCharacter.h"
 #include "ScavarHUD.h"
 #include "ScavarPlayerController.h"
+#include "ScavarVitalsComponent.h"
+#include "ScavarWeaponComponent.h"
+#include "ScavarWorldSave.h"
 #include "ScavarLog.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
@@ -58,4 +61,23 @@ AActor* AScavarGameMode::ChoosePlayerStart_Implementation(AController* Player)
 		UE_LOG(LogScavar, Warning, TEXT("No spawn point is %.0f cm away from every player; using any spawn point."), MinSpawnDistanceFromPlayers);
 	}
 	return Pool[FMath::RandRange(0, Pool.Num() - 1)];
+}
+
+void AScavarGameMode::Logout(AController* Exiting)
+{
+	if (AScavarCharacter* Character = Exiting ? Cast<AScavarCharacter>(Exiting->GetPawn()) : nullptr)
+	{
+		if (!Character->GetVitals()->IsDead())
+		{
+			if (!Character->GetWeapon()->Holster())
+			{
+				Character->GetWeapon()->ReleaseOnDeath(); // never lose a magazine just because the bag was full
+			}
+			if (UScavarWorldSave* Save = GetWorld()->GetSubsystem<UScavarWorldSave>())
+			{
+				Save->SaveCharacter(*Character);
+			}
+		}
+	}
+	Super::Logout(Exiting);
 }

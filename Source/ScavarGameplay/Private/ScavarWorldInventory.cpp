@@ -181,20 +181,52 @@ void UScavarWorldInventory::ForEachPickup(TFunctionRef<void(AScavarPickup&)> Vis
 	}
 }
 
+int64 UScavarWorldInventory::HashAccountKey(const FString& AccountKey)
+{
+	uint64 Hash = 1469598103934665603ULL; // FNV-1a 64
+	FTCHARToUTF8 Utf8(*AccountKey);
+	for (int32 i = 0; i < Utf8.Length(); ++i)
+	{
+		Hash ^= static_cast<uint8>(Utf8.Get()[i]);
+		Hash *= 1099511628211ULL;
+	}
+	return static_cast<int64>((Hash >> 1) | 1ULL); // positive and never 0
+}
+
+Scavar::ContainerId UScavarWorldInventory::FindOwnedContainer(int64 OwnerHash, Scavar::ContainerKind Kind) const
+{
+	if (Store)
+	{
+		for (const auto& Entry : Store->AllContainers())
+		{
+			if (Entry.second.Owner == OwnerHash && Entry.second.Kind == Kind)
+			{
+				return Entry.first;
+			}
+		}
+	}
+	return 0;
+}
+
 void UScavarWorldInventory::GetAccountContainers(const FString& AccountKey, Scavar::ContainerId& OutStash, Scavar::ContainerId& OutReturns)
 {
 	FAccountContainers& Entry = Accounts.FindOrAdd(AccountKey);
+	const int64 OwnerHash = HashAccountKey(AccountKey);
+	if (Entry.Stash == 0) { Entry.Stash = FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Stash); }
+	if (Entry.Returns == 0) { Entry.Returns = FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Returns); }
 	if (Entry.Stash == 0 && Store)
 	{
 		Execute([&](Scavar::ItemStore& S)
 		{
 			Scavar::Container Stash;
+			Stash.Owner = OwnerHash;
 			Stash.Kind = Scavar::ContainerKind::Stash;
 			Stash.W = 8;
 			Stash.H = 10;
 			Scavar::Status St = S.AddContainer(Stash, &Entry.Stash);
 			if (St != Scavar::Status::Ok) { return St; }
 			Scavar::Container Returns;
+			Returns.Owner = OwnerHash;
 			Returns.Kind = Scavar::ContainerKind::Returns;
 			Returns.W = 10;
 			Returns.H = 10;

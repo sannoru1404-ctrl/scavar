@@ -2,6 +2,7 @@
 #include "ScavarLog.h"
 #include "ScavarPickup.h"
 #include "ScavarWorldInventory.h"
+#include "ScavarWorldSave.h"
 #include "EngineUtils.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
@@ -75,6 +76,11 @@ void UScavarLootSubsystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (!bReady)
+	{
+		return;
+	}
+	// Never fill a world that is still being loaded from disk (it would double the loot).
+	if (const UScavarWorldSave* Save = GetWorld()->GetSubsystem<UScavarWorldSave>(); Save && !Save->IsReady())
 	{
 		return;
 	}

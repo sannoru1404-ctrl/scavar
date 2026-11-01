@@ -166,6 +166,47 @@ bool UScavarVitalsComponent::FindTreatableZone(EScavarTreatment Kind, EScavarHit
 	return false;
 }
 
+FString UScavarVitalsComponent::ExportSave() const
+{
+	TArray<FString> Parts;
+	for (int32 i = 0; i < Scavar::ZoneCount; ++i) { Parts.Add(FString::SanitizeFloat(Health.Hp[i])); }
+	for (int32 i = 0; i < Scavar::ZoneCount; ++i) { Parts.Add(FString::FromInt(static_cast<int32>(Health.Bleed[i]))); }
+	for (int32 i = 0; i < Scavar::ZoneCount; ++i) { Parts.Add(Health.Fracture[i] ? TEXT("1") : TEXT("0")); }
+	Parts.Add(FString::SanitizeFloat(Survival.Food));
+	Parts.Add(FString::SanitizeFloat(Survival.Water));
+	Parts.Add(FString::SanitizeFloat(Survival.Warmth));
+	Parts.Add(FString::SanitizeFloat(Stamina.Value));
+	Parts.Add(FString::SanitizeFloat(Health.AnalgesiaSeconds));
+	return FString::Join(Parts, TEXT(","));
+}
+
+bool UScavarVitalsComponent::ImportSave(const FString& Text)
+{
+	TArray<FString> Parts;
+	Text.ParseIntoArray(Parts, TEXT(","));
+	if (!GetOwner() || !GetOwner()->HasAuthority() || Parts.Num() != 3 * Scavar::ZoneCount + 5)
+	{
+		return false;
+	}
+	Scavar::CharacterHealth Loaded = Scavar::MakeHealth();
+	for (int32 i = 0; i < Scavar::ZoneCount; ++i)
+	{
+		Loaded.Hp[i] = FMath::Clamp(FCString::Atof(*Parts[i]), 0.f, 500.f);
+		const int32 Bleed = FMath::Clamp(FCString::Atoi(*Parts[Scavar::ZoneCount + i]), 0, 2);
+		Loaded.Bleed[i] = static_cast<Scavar::BleedLevel>(Bleed);
+		Loaded.Fracture[i] = Parts[2 * Scavar::ZoneCount + i] == TEXT("1");
+	}
+	const int32 Base = 3 * Scavar::ZoneCount;
+	Survival.Food = FMath::Clamp(FCString::Atof(*Parts[Base]), 0.f, 100.f);
+	Survival.Water = FMath::Clamp(FCString::Atof(*Parts[Base + 1]), 0.f, 100.f);
+	Survival.Warmth = FMath::Clamp(FCString::Atof(*Parts[Base + 2]), 0.f, 100.f);
+	Stamina.Value = FMath::Clamp(FCString::Atof(*Parts[Base + 3]), 0.f, 100.f);
+	Loaded.AnalgesiaSeconds = FMath::Max(0.f, FCString::Atof(*Parts[Base + 4]));
+	Health = Loaded;
+	RefreshSnapshot();
+	return true;
+}
+
 void UScavarVitalsComponent::DebugRestoreAll()
 {
 	if (!GetOwner() || !GetOwner()->HasAuthority() || Health.Dead)

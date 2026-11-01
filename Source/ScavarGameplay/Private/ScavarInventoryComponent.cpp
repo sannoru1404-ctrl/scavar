@@ -104,9 +104,20 @@ void UScavarInventoryComponent::InitializeForPlayer(const FString& InAccountKey,
 	AccountKey = InAccountKey;
 	Inventory->GetAccountContainers(AccountKey, Stash, Returns);
 
-	Inventory->Execute([&](Scavar::ItemStore& S)
+	const int64 OwnerHash = UScavarWorldInventory::HashAccountKey(AccountKey);
+	Pockets = Inventory->FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Pockets);
+	bRestored = Pockets != 0;
+	if (bRestored)
+	{
+		Backpack = Inventory->FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Backpack);
+		Secure = Inventory->FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Secure);
+		Worn = Inventory->FindOwnedContainer(OwnerHash, Scavar::ContainerKind::Vest);
+		bGiveStarterKit = false;
+	}
+	else Inventory->Execute([&](Scavar::ItemStore& S)
 	{
 		Scavar::Container C;
+		C.Owner = OwnerHash;
 		C.Kind = Scavar::ContainerKind::Pockets; C.W = 4; C.H = 1;
 		Scavar::Status St = S.AddContainer(C, &Pockets);
 		if (St != Scavar::Status::Ok) { return St; }
@@ -129,6 +140,7 @@ void UScavarInventoryComponent::InitializeForPlayer(const FString& InAccountKey,
 		return Scavar::Status::Ok;
 	});
 	bInitialized = true;
+	RebuildArmor();
 	ChangedHandle = Inventory->OnChanged.AddUObject(this, &UScavarInventoryComponent::HandleStoreChanged);
 
 	if (bGiveStarterKit)

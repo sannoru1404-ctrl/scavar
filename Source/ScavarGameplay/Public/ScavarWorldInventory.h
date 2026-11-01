@@ -40,6 +40,11 @@ public:
 	AScavarPickup* FindPickupByItem(int64 ItemId) const;
 	void ForEachPickup(TFunctionRef<void(AScavarPickup&)> Visit) const;
 
+	/** Stable 63-bit id of an account key; stored as the Owner of every container the account owns (stash, returns, body). */
+	static int64 HashAccountKey(const FString& AccountKey);
+	/** First container of the given kind owned by OwnerHash, or 0. */
+	Scavar::ContainerId FindOwnedContainer(int64 OwnerHash, Scavar::ContainerKind Kind) const;
+
 	/** Account-level containers (stash, returns for items rescued from the secure pocket). Created on first use. */
 	void GetAccountContainers(const FString& AccountKey, Scavar::ContainerId& OutStash, Scavar::ContainerId& OutReturns);
 

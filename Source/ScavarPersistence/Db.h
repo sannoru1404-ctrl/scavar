@@ -58,6 +58,12 @@ public:
     bool BackupToDir(const std::string& dir, int64_t unixSeconds, int keep, std::string* outPath, std::string* err);
 
     // Small helpers (also used by tests).
+    // world_state key/value store (SYS-12): pickup positions, saved character state, clock. Values are opaque text.
+    bool SetState(const std::string& key, const std::string& value, std::string* err);
+    bool GetState(const std::string& key, std::string* value, std::string* err);   // *value untouched and true is NOT returned when missing
+    bool DeleteState(const std::string& key, std::string* err);
+    bool ListState(const std::string& keyPrefix, std::map<std::string, std::string>* out, std::string* err);
+
     bool Exec(const std::string& sql, std::string* err);
     bool ScalarInt(const std::string& sql, int64_t* out, std::string* err);
     bool EnsureAccount(const std::string& platformId, AccountId* out, std::string* err);

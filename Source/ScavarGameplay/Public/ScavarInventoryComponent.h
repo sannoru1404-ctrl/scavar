@@ -71,6 +71,9 @@ public:
 	Scavar::ContainerId GetPocketsId() const { return Pockets; }
 	Scavar::ContainerId GetBackpackId() const { return Backpack; }
 	Scavar::ContainerId GetWornId() const { return Worn; }
+	const FString& GetAccountKey() const { return AccountKey; }
+	/** True when this character's containers existed already (a reconnect or a restart of the host), so nothing new was created. */
+	bool WasRestored() const { return bRestored; }
 
 	FSimpleMulticastDelegate OnInventoryChanged;
 
@@ -101,4 +104,5 @@ private:
 	FDelegateHandle ChangedHandle;
 	int64 PendingTreatmentItem = 0;
 	bool bInitialized = false;
+	bool bRestored = false;
 };
