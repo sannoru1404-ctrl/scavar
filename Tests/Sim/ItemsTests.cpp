@@ -65,3 +65,17 @@ TEST(Items_PacksHaveGridsAndNothingElseDoes)
     if (school) { CHECK_EQ(school->GridW, 4); CHECK_EQ(school->GridH, 5); }
     for (const auto& r : l.Table.Rows) CHECK((r.Category == "pack") == (r.GridW > 0));
 }
+
+TEST(Items_ConsumableEffectsLoad)
+{
+    Loaded l = LoadAll();
+    CHECK(l.Ok);
+    CHECK_EQ(l.Table.Consumables.size(), size_t(10));
+    const ConsumableEffect* bread = l.Table.FindConsumable("FOOD_BREAD");
+    CHECK(bread != nullptr);
+    if (bread) { CHECK_NEAR(bread->FoodGain, 25, 1e-6); CHECK(!bread->Treatment.has_value()); }
+    const ConsumableEffect* bandage = l.Table.FindConsumable("MED_BANDAGE");
+    CHECK(bandage != nullptr);
+    if (bandage) CHECK(bandage->Treatment.has_value() && *bandage->Treatment == TreatmentKind::Bandage);
+    CHECK(l.Table.FindConsumable("W_PM") == nullptr);
+}

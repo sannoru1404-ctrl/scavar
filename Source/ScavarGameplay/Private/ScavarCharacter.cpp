@@ -1,5 +1,9 @@
 #include "ScavarCharacter.h"
 #include "ScavarVitalsComponent.h"
+#include "ScavarInventoryComponent.h"
+#include "GameFramework/GameModeBase.h"
+#include "GameFramework/PlayerState.h"
+#include "TimerManager.h"
 #include "ScavarLog.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -18,6 +22,7 @@ AScavarCharacter::AScavarCharacter()
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
 	Vitals = CreateDefaultSubobject<UScavarVitalsComponent>(TEXT("Vitals"));
+	Inventory = CreateDefaultSubobject<UScavarInventoryComponent>(TEXT("Inventory"));
 
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -40,6 +45,22 @@ void AScavarCharacter::BeginPlay()
 	{
 		Vitals->OnDied.AddDynamic(this, &AScavarCharacter::HandleDied);
 	}
+}
+
+void AScavarCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	if (!HasAuthority() || !Inventory)
+	{
+		return;
+	}
+	// The account key identifies the stash/returns containers across lives. Pilot: online id when present, else the display name.
+	FString Key = TEXT("local");
+	if (const APlayerState* State = NewController ? NewController->PlayerState : nullptr)
+	{
+		Key = State->GetUniqueId().IsValid() ? State->GetUniqueId().ToString() : State->GetPlayerName();
+	}
+	Inventory->InitializeForPlayer(Key, /*bGiveStarterKit=*/true);
 }
 
 void AScavarCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -157,5 +178,30 @@ void AScavarCharacter::HandleDied(AActor* /*Victim*/)
 	UE_LOG(LogScavarCombat, Log, TEXT("%s is dead; disabling input."), *GetName());
 	DisableInput(nullptr);
 	GetCharacterMovement()->DisableMovement();
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	GetMesh()->SetSimulatePhysics(false);
+
+	if (HasAuthority())
+	{
+		Inventory->HandleOwnerDied();
+		SetLifeSpan(BodyLifetimeSeconds);
+		AController* DeadController = GetController();
+		if (DeadController)
+		{
+			DeadController->UnPossess();
+			FTimerHandle Handle;
+			GetWorldTimerManager().SetTimer(Handle, FTimerDelegate::CreateUObject(this, &AScavarCharacter::Respawn, DeadController), RespawnDelaySeconds, false);
+		}
+	}
+}
+
+void AScavarCharacter::Respawn(AController* DeadController)
+{
+	if (IsValid(DeadController))
+	{
+		if (AGameModeBase* GameMode = GetWorld()->GetAuthGameMode())
+		{
+			GameMode->RestartPlayer(DeadController);
+		}
+	}
 }

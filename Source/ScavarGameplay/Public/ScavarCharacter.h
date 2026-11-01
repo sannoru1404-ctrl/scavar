@@ -6,6 +6,7 @@
 
 class UCameraComponent;
 class UScavarVitalsComponent;
+class UScavarInventoryComponent;
 
 /** First-person survivor. Movement speeds come from Scavar::MoveSpeed (SYS-02); the server validates sprinting. */
 UCLASS()
@@ -23,7 +24,10 @@ public:
 	virtual void Landed(const FHitResult& Hit) override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 
+	virtual void PossessedBy(AController* NewController) override;
+
 	UScavarVitalsComponent* GetVitals() const { return Vitals; }
+	UScavarInventoryComponent* GetInventory() const { return Inventory; }
 
 protected:
 	void MoveForward(float Value);
@@ -42,9 +46,15 @@ protected:
 	void HandleDied(AActor* Victim);
 
 	void UpdateMovementSpeed();
+	void Respawn(AController* DeadController);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scavar") TObjectPtr<UCameraComponent> FirstPersonCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scavar") TObjectPtr<UScavarVitalsComponent> Vitals;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scavar") TObjectPtr<UScavarInventoryComponent> Inventory;
+
+	/** Seconds the corpse stays before the player is respawned (the body itself lives BodyLifetimeSeconds). */
+	UPROPERTY(EditDefaultsOnly, Category = "Scavar") float RespawnDelaySeconds = 5.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Scavar") float BodyLifetimeSeconds = 3600.f;
 
 	UPROPERTY(Replicated) bool bWantsSprint = false;
 

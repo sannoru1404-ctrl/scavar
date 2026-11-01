@@ -50,6 +50,7 @@ struct ItemInstance
     int X = 0, Y = 0;
     bool Rot = false;
     uint32_t Flags = 0;
+    int32_t Aux = 0;   // type-specific payload; magazines: 1 + index of the loaded ammo type in GameData.Ammo (0 = empty)
     bool operator==(const ItemInstance&) const = default;
 };
 
@@ -94,6 +95,8 @@ public:
     Status AutoPlace(const std::string& defId, int qty, ContainerId container, bool allowRotate, ItemId* outId = nullptr, float durability = 100.f);
     Status SetDurability(ItemId id, float durability);
     Status SetFlags(ItemId id, uint32_t flags);
+    Status SetAux(ItemId id, int32_t aux);
+    Status SetQty(ItemId id, int qty);                                // 1..StackMax; use Remove() to delete
     Status FindFreeSlot(const std::string& defId, ContainerId container, bool allowRotate, ItemId ignoreItem, Placement* out) const;
 
     // Atomic death resolution (AT-036): secure-pocket items go to the stash `returns` container, the body containers
@@ -117,6 +120,7 @@ public:
     void SetNextIds(ItemId nextItem, ContainerId nextContainer);
 
     // ---- queries
+    const ItemCatalog* GetCatalog() const { return Catalog; }
     const ItemInstance* GetItem(ItemId id) const;
     const Container* GetContainer(ContainerId id) const;
     const std::vector<ItemId>& ItemsIn(ContainerId id) const;

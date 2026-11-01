@@ -273,7 +273,7 @@ Status ItemStore::Merge(ItemId srcId, ItemId dstId, int qty)
     if (srcId == dstId) return Status::InvalidArgument;
     auto s = Items.find(srcId), d = Items.find(dstId);
     if (s == Items.end() || d == Items.end()) return Status::NoSuchItem;
-    if (s->second.DefId != d->second.DefId || s->second.Flags != d->second.Flags) return Status::WrongDef;
+    if (s->second.DefId != d->second.DefId || s->second.Flags != d->second.Flags || s->second.Aux != d->second.Aux) return Status::WrongDef;
     const ItemDef* def = Catalog ? Catalog->Find(s->second.DefId) : nullptr;
     if (!def) return Status::NoSuchDef;
     const int n = qty <= 0 ? s->second.Qty : qty;
@@ -334,6 +334,30 @@ Status ItemStore::SetFlags(ItemId id, uint32_t flags)
     if (it == Items.end()) return Status::NoSuchItem;
     ItemInstance item = it->second;
     item.Flags = flags;
+    PutItem(item);
+    return Status::Ok;
+}
+
+Status ItemStore::SetQty(ItemId id, int qty)
+{
+    auto it = Items.find(id);
+    if (it == Items.end()) return Status::NoSuchItem;
+    const ItemDef* def = Catalog ? Catalog->Find(it->second.DefId) : nullptr;
+    if (!def) return Status::NoSuchDef;
+    if (qty < 1) return Status::InvalidArgument;
+    if (qty > def->StackMax) return Status::StackLimit;
+    ItemInstance item = it->second;
+    item.Qty = qty;
+    PutItem(item);
+    return Status::Ok;
+}
+
+Status ItemStore::SetAux(ItemId id, int32_t aux)
+{
+    auto it = Items.find(id);
+    if (it == Items.end()) return Status::NoSuchItem;
+    ItemInstance item = it->second;
+    item.Aux = aux;
     PutItem(item);
     return Status::Ok;
 }

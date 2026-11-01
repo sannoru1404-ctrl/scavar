@@ -3,6 +3,8 @@
 #include "GameData.h"
 #include "Inventory.h"
 #include "LootEconomy.h"
+#include "Survival.h"
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,9 +27,20 @@ struct ItemRow
     int QtyMin = 1, QtyMax = 1;   // quantity of a freshly spawned stack
 };
 
+// Effect of consuming ONE unit (data/consumables.csv). Treatments run through Survival.h sessions; gains are clamped to 0..100.
+struct ConsumableEffect
+{
+    std::string ItemId;
+    float FoodGain = 0, WaterGain = 0;
+    std::optional<TreatmentKind> Treatment;
+};
+
 struct ItemTable
 {
     std::vector<ItemRow> Rows;
+    std::vector<ConsumableEffect> Consumables;
+
+    const ConsumableEffect* FindConsumable(const std::string& itemId) const;
 
     const ItemRow* Find(const std::string& id) const;
     bool Load(const std::string& dataDir, const GameData& game, std::string* error);

@@ -47,6 +47,8 @@ struct FScavarVitalsSnapshot
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FScavarVitalsChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScavarDied, AActor*, Victim);
+/** Fired on the server when a timed treatment ends; bCompleted == false means it was interrupted and no resource may be consumed. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FScavarTreatmentFinished, bool /*bCompleted*/);
 
 /**
  * Health, armor, hunger/thirst/cold and stamina. The server owns all state and runs the engine-agnostic Scavar::Sim code;
@@ -75,6 +77,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Scavar|Vitals")
 	bool BeginTreatment(EScavarTreatment Kind, EScavarHitZone Zone);
 
+	/** Server only. Clamps to 0..100. */
+	void AddNutrition(float Food, float Water);
+	/** First wounded zone that the given treatment can fix, for quick-use without choosing a body part. */
+	bool FindTreatableZone(EScavarTreatment Kind, EScavarHitZone& OutZone) const;
+	bool IsTreating() const { return bTreating; }
+	/** Development only: full health, no wounds, full needs. Not available for dead characters. */
+	void DebugRestoreAll();
+
 	void NotifyWeaponSwapped();
 	void SetMoveMode(Scavar::MoveMode Mode);
 	void SetArmor(const Scavar::ArmorLoadout& NewArmor);
@@ -88,6 +98,7 @@ public:
 	float GetCarriedKg() const { return CarriedKg; }
 	const FScavarVitalsSnapshot& GetSnapshot() const { return OwnerSnapshot; }
 
+	FScavarTreatmentFinished OnTreatmentFinished;
 	UPROPERTY(BlueprintAssignable, Category = "Scavar|Vitals") FScavarVitalsChanged OnVitalsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Scavar|Vitals") FScavarDied OnDied;
 

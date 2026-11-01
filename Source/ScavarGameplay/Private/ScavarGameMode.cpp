@@ -1,5 +1,7 @@
 #include "ScavarGameMode.h"
 #include "ScavarCharacter.h"
+#include "ScavarHUD.h"
+#include "ScavarPlayerController.h"
 #include "ScavarLog.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerStart.h"
@@ -8,6 +10,8 @@
 AScavarGameMode::AScavarGameMode()
 {
 	DefaultPawnClass = AScavarCharacter::StaticClass();
+	PlayerControllerClass = AScavarPlayerController::StaticClass();
+	HUDClass = AScavarHUD::StaticClass();
 }
 
 AActor* AScavarGameMode::ChoosePlayerStart_Implementation(AController* Player)

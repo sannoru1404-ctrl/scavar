@@ -37,6 +37,7 @@ CREATE TABLE items(
   x INTEGER NOT NULL, y INTEGER NOT NULL,
   rot INTEGER NOT NULL DEFAULT 0,
   flags INTEGER NOT NULL DEFAULT 0,
+  aux INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')));
 CREATE INDEX idx_items_container ON items(container_id);
 CREATE TABLE world_state(key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -180,9 +181,9 @@ bool Db::ApplyInsideTx(const ChangeSet& cs, std::string* err)
 {
     Stmt upCont(Handle, "INSERT INTO containers(id,kind,owner_id,w,h) VALUES(?1,?2,?3,?4,?5) "
                         "ON CONFLICT(id) DO UPDATE SET kind=excluded.kind, owner_id=excluded.owner_id, w=excluded.w, h=excluded.h");
-    Stmt upItem(Handle, "INSERT INTO items(id,def_id,qty,durability,container_id,x,y,rot,flags) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9) "
+    Stmt upItem(Handle, "INSERT INTO items(id,def_id,qty,durability,container_id,x,y,rot,flags,aux) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) "
                         "ON CONFLICT(id) DO UPDATE SET def_id=excluded.def_id, qty=excluded.qty, durability=excluded.durability, "
-                        "container_id=excluded.container_id, x=excluded.x, y=excluded.y, rot=excluded.rot, flags=excluded.flags");
+                        "container_id=excluded.container_id, x=excluded.x, y=excluded.y, rot=excluded.rot, flags=excluded.flags, aux=excluded.aux");
     Stmt delItem(Handle, "DELETE FROM items WHERE id=?1");
     Stmt delCont(Handle, "DELETE FROM containers WHERE id=?1");
     if (!upCont.Ok() || !upItem.Ok() || !delItem.Ok() || !delCont.Ok()) { SetError(err, "prepare"); return false; }
@@ -202,7 +203,7 @@ bool Db::ApplyInsideTx(const ChangeSet& cs, std::string* err)
             const ItemInstance& i = *c.After;
             upItem.Reset();
             upItem.Int(1, i.Id); upItem.Text(2, i.DefId); upItem.Int(3, i.Qty); upItem.Real(4, i.Durability);
-            upItem.Int(5, i.Container); upItem.Int(6, i.X); upItem.Int(7, i.Y); upItem.Int(8, i.Rot ? 1 : 0); upItem.Int(9, i.Flags);
+            upItem.Int(5, i.Container); upItem.Int(6, i.X); upItem.Int(7, i.Y); upItem.Int(8, i.Rot ? 1 : 0); upItem.Int(9, i.Flags); upItem.Int(10, i.Aux);
             if (!upItem.Run()) { SetError(err, "upsert item"); return false; }
         }
         else
@@ -276,7 +277,7 @@ bool Db::LoadInto(ItemStore& store, std::string* err)
         }
     }
     {
-        Stmt s(Handle, "SELECT id,def_id,qty,durability,container_id,x,y,rot,flags FROM items ORDER BY id");
+        Stmt s(Handle, "SELECT id,def_id,qty,durability,container_id,x,y,rot,flags,aux FROM items ORDER BY id");
         if (!s.Ok()) { SetError(err, "prepare items"); return false; }
         while (sqlite3_step(s.S) == SQLITE_ROW)
         {
@@ -289,6 +290,7 @@ bool Db::LoadInto(ItemStore& store, std::string* err)
             i.X = sqlite3_column_int(s.S, 5); i.Y = sqlite3_column_int(s.S, 6);
             i.Rot = sqlite3_column_int(s.S, 7) != 0;
             i.Flags = static_cast<uint32_t>(sqlite3_column_int64(s.S, 8));
+            i.Aux = sqlite3_column_int(s.S, 9);
             if (Status st = store.ImportItem(i); st != Status::Ok) { if (err) *err = std::string("cannot import item ") + std::to_string(i.Id) + ": " + StatusName(st); return false; }
         }
     }

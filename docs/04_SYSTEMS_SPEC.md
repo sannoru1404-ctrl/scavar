@@ -109,7 +109,7 @@
 **Правила**
 
 1. **Определение предмета** (`data/items_*.csv`, M2): `def_id`, категория, размер W×H, вес, `stack_max`, `nominal` (целевое число в мире), `min` (порог пополнения), `lifetime_s`, `restock_s`, теги применения, допустимые тиры, редкость.
-2. **Экземпляр предмета:** `id` (int64, выдаётся БД), `def_id`, `qty`, `durability`, `container_id`, `x`, `y`, `rot`, `flags`, `created_at`. Других полей нет (ADR-009).
+2. **Экземпляр предмета:** `id` (int64, выдаётся БД), `def_id`, `qty`, `durability`, `container_id`, `x`, `y`, `rot`, `flags`, `aux`, `created_at`. Других полей нет (ADR-009). `aux` — полезная нагрузка типа предмета; у магазина: `(патроны << 8) | (индекс типа патрона + 1)`, пустой магазин — 0 (количество `qty` магазина всегда 1).
 3. **Точки лута** — акторы `LootSpawnPoint` с тегами (применение, размер, тир). Жилой дом: 3–8 точек; крупный объект: 8–20.
 4. **Цикл CE** каждые 5 мин: для типов, у которых `count < min`, сервер пытается создать предметы в случайных свободных подходящих точках, соблюдая `nominal` как жёсткий потолок.
 5. **Ограничения спавна (MUST):** нет игрока в радиусе 100 м и нет в поле зрения; здание-кулдаун после спавна 45 мин.
@@ -343,7 +343,7 @@
 accounts(id PK, platform_id UNIQUE, created_at)
 characters(id PK, account_id FK, alive, pos_x, pos_y, pos_z, yaw, hp_json, stats_json, updated_at)
 containers(id PK, kind, owner_id, w, h)            -- kind: pockets|vest|backpack|secure|stash|returns|world|corpse|ground
-items(id PK, def_id, qty, durability, container_id FK NOT NULL, x, y, rot, flags, created_at)
+items(id PK, def_id, qty, durability, container_id FK NOT NULL, x, y, rot, flags, aux, created_at)
 world_state(key PK, value)
 trader_state(trader_id, def_id, stock, next_restock, PRIMARY KEY(trader_id, def_id))
 account_progress(account_id, trader_id, loyalty, turnover, PRIMARY KEY(account_id, trader_id))

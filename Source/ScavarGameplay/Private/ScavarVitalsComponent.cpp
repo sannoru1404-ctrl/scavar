@@ -44,6 +44,7 @@ void UScavarVitalsComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		if (Status != Scavar::TreatmentStatus::InProgress)
 		{
 			bTreating = false;
+			OnTreatmentFinished.Broadcast(Status == Scavar::TreatmentStatus::Completed);
 		}
 	}
 
@@ -71,6 +72,7 @@ bool UScavarVitalsComponent::ApplyProjectileHit(EScavarHitZone Zone, float Damag
 	{
 		Scavar::InterruptTreatment(Treatment, Scavar::TreatmentInterrupt::DamageTaken);
 		bTreating = false;
+		OnTreatmentFinished.Broadcast(false);
 	}
 	if (Result.Killed)
 	{
@@ -91,6 +93,7 @@ void UScavarVitalsComponent::ApplyFall(float HeightMeters)
 	{
 		Scavar::InterruptTreatment(Treatment, Scavar::TreatmentInterrupt::DamageTaken);
 		bTreating = false;
+		OnTreatmentFinished.Broadcast(false);
 	}
 	if (Health.Dead)
 	{
@@ -120,6 +123,7 @@ void UScavarVitalsComponent::NotifyWeaponSwapped()
 	{
 		Scavar::InterruptTreatment(Treatment, Scavar::TreatmentInterrupt::WeaponSwapped);
 		bTreating = false;
+		OnTreatmentFinished.Broadcast(false);
 	}
 }
 
@@ -130,7 +134,45 @@ void UScavarVitalsComponent::SetMoveMode(Scavar::MoveMode Mode)
 	{
 		Scavar::InterruptTreatment(Treatment, Scavar::TreatmentInterrupt::SprintStarted);
 		bTreating = false;
+		OnTreatmentFinished.Broadcast(false);
 	}
+}
+
+void UScavarVitalsComponent::AddNutrition(float Food, float Water)
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority() || Health.Dead)
+	{
+		return;
+	}
+	Survival.Food = FMath::Clamp(Survival.Food + Food, 0.f, 100.f);
+	Survival.Water = FMath::Clamp(Survival.Water + Water, 0.f, 100.f);
+	RefreshSnapshot();
+}
+
+bool UScavarVitalsComponent::FindTreatableZone(EScavarTreatment Kind, EScavarHitZone& OutZone) const
+{
+	for (int32 Index = 0; Index < Scavar::ZoneCount; ++Index)
+	{
+		if (Scavar::CanTreat(ToSim(Kind), Health, static_cast<Scavar::HitZone>(Index)))
+		{
+			OutZone = static_cast<EScavarHitZone>(Index);
+			return true;
+		}
+	}
+	return false;
+}
+
+void UScavarVitalsComponent::DebugRestoreAll()
+{
+	if (!GetOwner() || !GetOwner()->HasAuthority() || Health.Dead)
+	{
+		return;
+	}
+	Health = Scavar::MakeHealth();
+	Survival = Scavar::SurvivalState();
+	Stamina = Scavar::StaminaState();
+	bTreating = false;
+	RefreshSnapshot();
 }
 
 void UScavarVitalsComponent::SetArmor(const Scavar::ArmorLoadout& NewArmor)

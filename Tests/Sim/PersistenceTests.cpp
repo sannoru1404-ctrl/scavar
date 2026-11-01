@@ -101,6 +101,7 @@ TEST(Db_RoundTripStoreToDbAndBack)
     ItemId extra = 0;
     CHECK(a.Split(a.ItemsIn(bag).front(), 10, stash, 0, 0, false, &extra) == Status::Ok);
     CHECK(a.SetFlags(extra, 0xA5A5u) == Status::Ok);
+    CHECK(a.SetAux(extra, 7) == Status::Ok);
 
     Db db; std::string err;
     CHECK(db.Open(dir.File("rt.sqlite"), &err));
@@ -111,6 +112,7 @@ TEST(Db_RoundTripStoreToDbAndBack)
     CHECK_EQ(b.NextItemId(), a.NextItemId());
     CHECK_EQ(b.NextContainerId(), a.NextContainerId());
     CHECK_EQ(b.GetItem(extra)->Flags, 0xA5A5u);
+    CHECK_EQ(b.GetItem(extra)->Aux, 7);
     CHECK_NEAR(b.ContainerWeight(bag), a.ContainerWeight(bag), 1e-6);
 
     // Incremental changes: move, delete, container delete.

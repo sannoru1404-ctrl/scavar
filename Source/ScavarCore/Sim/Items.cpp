@@ -51,9 +51,16 @@ const ItemRow* ItemTable::Find(const std::string& id) const
     return nullptr;
 }
 
+const ConsumableEffect* ItemTable::FindConsumable(const std::string& itemId) const
+{
+    for (const auto& c : Consumables) if (c.ItemId == itemId) return &c;
+    return nullptr;
+}
+
 bool ItemTable::Load(const std::string& dir, const GameData& game, std::string* error)
 {
     Rows.clear();
+    Consumables.clear();
     CsvTable t;
     std::string err;
     if (!LoadCsvFile(dir + "/items.csv", t, &err)) ITEMS_FAIL(err);
@@ -107,6 +114,31 @@ bool ItemTable::Load(const std::string& dir, const GameData& game, std::string* 
         if (const AmmoDef* a = game.FindAmmo(row.Id); a && a->Rarity_ != row.Rarity_) ITEMS_FAIL("items.csv: rarity differs from ammo.csv: " + row.Id);
         if (const ArmorDef* a = game.FindArmor(row.Id); a && a->Rarity_ != row.Rarity_) ITEMS_FAIL("items.csv: rarity differs from armor.csv: " + row.Id);
     }
+    CsvTable c;
+    if (!LoadCsvFile(dir + "/consumables.csv", c, &err)) ITEMS_FAIL(err);
+    for (size_t r = 0; r < c.Rows.size(); ++r)
+    {
+        ConsumableEffect e;
+        e.ItemId = c.Cell(r, "item_id");
+        double food = 0, water = 0;
+        if (!ToDouble(c.Cell(r, "food"), food) || !ToDouble(c.Cell(r, "water"), water) || food < 0 || water < 0 || food > 100 || water > 100)
+            ITEMS_FAIL("consumables.csv: bad value for " + e.ItemId);
+        e.FoodGain = static_cast<float>(food);
+        e.WaterGain = static_cast<float>(water);
+        const std::string& tr = c.Cell(r, "treatment");
+        if (tr == "bandage") e.Treatment = TreatmentKind::Bandage;
+        else if (tr == "tourniquet") e.Treatment = TreatmentKind::Tourniquet;
+        else if (tr == "hemostatic") e.Treatment = TreatmentKind::HemostaticPack;
+        else if (tr == "splint") e.Treatment = TreatmentKind::Splint;
+        else if (tr == "analgesic") e.Treatment = TreatmentKind::Analgesic;
+        else if (tr == "medkit") e.Treatment = TreatmentKind::AutoMedKit;
+        else if (!tr.empty()) ITEMS_FAIL("consumables.csv: unknown treatment '" + tr + "' for " + e.ItemId);
+        if (!Find(e.ItemId)) ITEMS_FAIL("consumables.csv: unknown item " + e.ItemId);
+        if (FindConsumable(e.ItemId)) ITEMS_FAIL("consumables.csv: duplicate item " + e.ItemId);
+        if (e.FoodGain == 0 && e.WaterGain == 0 && !e.Treatment) ITEMS_FAIL("consumables.csv: no effect for " + e.ItemId);
+        Consumables.push_back(std::move(e));
+    }
+
     for (const auto& w : game.Weapons)
         if (w.Release_ == Release::Slice && !Find(w.Id)) ITEMS_FAIL("weapons.csv slice weapon missing from items.csv: " + w.Id);
     for (const auto& a : game.Ammo)
