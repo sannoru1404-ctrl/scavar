@@ -319,6 +319,39 @@ void UScavarInventoryComponent::ServerDropItem_Implementation(int64 ItemId)
 	}
 }
 
+void UScavarInventoryComponent::ServerToggleSecure_Implementation(int64 ItemId)
+{
+	UScavarWorldInventory* Inventory = World();
+	if (!Inventory || !bInitialized)
+	{
+		return;
+	}
+	const Scavar::ItemInstance* Item = Inventory->GetStore()->GetItem(ItemId);
+	if (!Item || !Owns(Item->Container) || Item->Container == Worn)
+	{
+		return;
+	}
+	if (const UScavarWeaponComponent* W = Weapon(); W && W->GetEquippedItem() == ItemId)
+	{
+		ClientNotify(TEXT("Put the weapon away first (H)."));
+		return;
+	}
+	const Scavar::ContainerId From = Item->Container;
+	const Scavar::Status Result = Inventory->Execute([&](Scavar::ItemStore& S)
+	{
+		if (From == Secure)
+		{
+			Scavar::Status St = S.AutoMove(ItemId, Backpack, true, Secure);
+			return St != Scavar::Status::Ok ? S.AutoMove(ItemId, Pockets, true, Secure) : St;
+		}
+		return S.AutoMove(ItemId, Secure, true, From);
+	});
+	if (Result != Scavar::Status::Ok)
+	{
+		ClientNotify(TEXT("No room there."));
+	}
+}
+
 void UScavarInventoryComponent::ServerUseItem_Implementation(int64 ItemId)
 {
 	UScavarWorldInventory* Inventory = World();

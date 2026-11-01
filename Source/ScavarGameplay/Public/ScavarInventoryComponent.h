@@ -61,6 +61,8 @@ public:
 	UFUNCTION(Server, Reliable) void ServerMoveItem(int64 ItemId, int64 DstContainer, int32 X, int32 Y, bool bRot);
 	UFUNCTION(Server, Reliable) void ServerPickup(AScavarPickup* Pickup);
 	UFUNCTION(Server, Reliable) void ServerDropItem(int64 ItemId);
+	/** Moves an item into the secure pocket (survives death), or back out of it into the backpack/pockets. */
+	UFUNCTION(Server, Reliable) void ServerToggleSecure(int64 ItemId);
 	UFUNCTION(Server, Reliable) void ServerUseItem(int64 ItemId);
 
 	// ---- Queries (owning client and server) ----

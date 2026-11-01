@@ -69,13 +69,20 @@ void AScavarHUD::DrawHUD()
 	const UScavarInventoryComponent* Inventory = Character->GetInventory();
 	if (Inventory)
 	{
-		DrawHudLine(FString::Printf(TEXT("Carried %.1f kg   [Tab] inventory  [1-9] use  [Alt+1-9] drop  [E] pick up"), Inventory->GetCarriedKg()), FLinearColor::Gray);
+		DrawHudLine(FString::Printf(TEXT("Carried %.1f kg   [Tab] inventory  [1-9] use  [Alt+1-9] drop  [Z+1-9] secure pocket  [E] pick up"), Inventory->GetCarriedKg()), FLinearColor::Gray);
 		if (PC->IsInventoryOpen())
 		{
 			int32 Number = 1;
+			TMap<int64, FString> Places;
+			static const TCHAR* KindNames[] = {TEXT("pockets"), TEXT("vest"), TEXT("backpack"), TEXT("SECURE"), TEXT("stash"), TEXT("returns"), TEXT("world"), TEXT("corpse"), TEXT("ground"), TEXT("magwell")};
+			for (const FScavarContainerView& C : Inventory->GetContainers())
+			{
+				Places.Add(C.ContainerId, C.Kind < UE_ARRAY_COUNT(KindNames) ? KindNames[C.Kind] : TEXT("?"));
+			}
 			for (const FScavarItemView& Item : Inventory->GetItems())
 			{
-				DrawHudLine(FString::Printf(TEXT("%d. %s x%d  (container %lld @ %d,%d)"), Number++, *Item.DefId.ToString(), Item.Qty, Item.ContainerId, Item.X, Item.Y), FLinearColor::Green);
+				const FString* Place = Places.Find(Item.ContainerId);
+				DrawHudLine(FString::Printf(TEXT("%d. %s x%d  [%s %d,%d]"), Number++, *Item.DefId.ToString(), Item.Qty, Place ? **Place : TEXT("?"), Item.X, Item.Y), FLinearColor::Green);
 			}
 		}
 	}

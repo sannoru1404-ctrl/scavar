@@ -46,10 +46,13 @@ protected:
 	template <int32 Index> void SlotAction() { SlotPressed(Index); }
 	void DropModifierPressed() { bDropModifier = true; }
 	void DropModifierReleased() { bDropModifier = false; }
+	void SecureModifierPressed() { bSecureModifier = true; }
+	void SecureModifierReleased() { bSecureModifier = false; }
 
 private:
 	bool CheatsAllowed() const;
 
 	bool bInventoryOpen = false;
 	bool bDropModifier = false;
+	bool bSecureModifier = false;
 };

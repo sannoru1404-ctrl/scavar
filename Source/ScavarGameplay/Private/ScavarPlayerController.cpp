@@ -27,6 +27,8 @@ void AScavarPlayerController::SetupInputComponent()
 	InputComponent->BindAction(TEXT("Holster"), IE_Pressed, this, &AScavarPlayerController::HolsterPressed);
 	InputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &AScavarPlayerController::InteractPressed);
 	InputComponent->BindAction(TEXT("Inventory"), IE_Pressed, this, &AScavarPlayerController::ToggleInventory);
+	InputComponent->BindAction(TEXT("SecureModifier"), IE_Pressed, this, &AScavarPlayerController::SecureModifierPressed);
+	InputComponent->BindAction(TEXT("SecureModifier"), IE_Released, this, &AScavarPlayerController::SecureModifierReleased);
 	InputComponent->BindAction(TEXT("DropModifier"), IE_Pressed, this, &AScavarPlayerController::DropModifierPressed);
 	InputComponent->BindAction(TEXT("DropModifier"), IE_Released, this, &AScavarPlayerController::DropModifierReleased);
 	InputComponent->BindAction(TEXT("Slot1"), IE_Pressed, this, &AScavarPlayerController::SlotAction<0>);
@@ -108,7 +110,11 @@ void AScavarPlayerController::SlotPressed(int32 SlotIndex)
 		return;
 	}
 	const FScavarItemView& Item = Inventory->GetItems()[SlotIndex];
-	if (bDropModifier)
+	if (bSecureModifier)
+	{
+		Inventory->ServerToggleSecure(Item.ItemId);
+	}
+	else if (bDropModifier)
 	{
 		Inventory->ServerDropItem(Item.ItemId);
 	}
