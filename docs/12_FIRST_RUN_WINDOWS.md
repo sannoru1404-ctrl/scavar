@@ -21,9 +21,9 @@
 
 1. Клонировать репозиторий в путь без пробелов, например `C:\Dev\scavar`.
 2. Задать переменную окружения `SCAVAR_UE_ROOT` на корень движка (например `D:\UE\UnrealEngine`).
-3. Загрузить SQLite: открыть <https://www.sqlite.org/download.html>, взять актуальную версию amalgamation и её SHA3/SHA256, затем:
+3. Загрузить SQLite: открыть <https://www.sqlite.org/download.html>, найти «C source code as an amalgamation», взять год из ссылки, цифры версии из имени файла и **SHA3-256** рядом с ним, затем:
    ```powershell
-   .\tools\fetch_sqlite.ps1 -Year 2025 -Version 3490100 -Sha256 <хеш с сайта>
+   .\tools\fetch_sqlite.ps1 -Year 2025 -Version 3490100 -Sha3 <SHA3-256 с сайта>
    ```
 4. ПКМ на `SCAVAR.uproject` → *Switch Unreal Engine version…* → выбрать вашу сборку. Это локально меняет `EngineAssociation`; **файл `SCAVAR.uproject` не коммитить**, пока версия не утверждена.
 5. Собрать: `.\tools\build.ps1 -Target Editor` (затем `-Target Server`, `-Target Client`). Логи — `Saved\BuildLogs\`.

@@ -91,6 +91,19 @@ def main():
         spawn_building(f"House_{i:02d}", centre, size, ["residential", "farm"], tier, building_id, points=rng.randint(3, 7))
         building_id += 1
 
+    # AI zones: marauders near the granary, wolves in the open fields at the edge (Scavar archetypes, see docs/04 SYS-08)
+    zone_class = unreal.load_class(None, "/Script/ScavarGameplay.ScavarAiZone")
+    marauders = spawn(zone_class, (granary[0] + 25000, granary[1] - 15000, 100), label="AiZone_Marauders")
+    marauders.set_editor_property("archetype", unreal.ScavarArchetype.MARAUDER)
+    marauders.set_editor_property("max_groups", 2)
+    marauders.set_editor_property("ring_radius_cm", 30000.0)
+    wolves = spawn(zone_class, (-45000, 40000, 100), label="AiZone_Wolves")
+    wolves.set_editor_property("archetype", unreal.ScavarArchetype.WOLF)
+    wolves.set_editor_property("max_groups", 2)
+    wolves.set_editor_property("min_group_size", 2)
+    wolves.set_editor_property("max_group_size", 3)
+    wolves.set_editor_property("ring_radius_cm", 35000.0)
+
     # perimeter walls so nobody falls off the plain
     half = SQUARE_CM / 2.0
     for name, loc, size in (("WallN", (0, half, 400), (SQUARE_CM, 100, 800)), ("WallS", (0, -half, 400), (SQUARE_CM, 100, 800)),
