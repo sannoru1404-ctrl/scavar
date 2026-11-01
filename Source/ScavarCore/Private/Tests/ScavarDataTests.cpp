@@ -17,7 +17,8 @@ bool FScavarGameDataLoadsTest::RunTest(const FString& Parameters)
 
 	UScavarGameDataSubsystem* Subsystem = NewObject<UScavarGameDataSubsystem>();
 	FString Error;
-	TestTrue(*FString::Printf(TEXT("tables load: %s"), *Error), Subsystem->LoadFrom(Directory, Error));
+	const bool bLoaded = Subsystem->LoadFrom(Directory, Error);
+	TestTrue(*FString::Printf(TEXT("tables load: %s"), *Error), bLoaded);
 	const Scavar::GameData& Data = Subsystem->GetData();
 	TestEqual(TEXT("ammo rows"), (int32)Data.Ammo.size(), 12);
 	TestEqual(TEXT("weapon rows"), (int32)Data.Weapons.size(), 16);

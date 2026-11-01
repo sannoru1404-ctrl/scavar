@@ -3,6 +3,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "UObject/ConstructorHelpers.h"
@@ -34,6 +35,7 @@ AScavarNPC::AScavarNPC()
 	Label->SetHorizontalAlignment(EHTA_Center);
 
 	GetCharacterMovement()->MaxWalkSpeed = 380.f;
+	GetCharacterMovement()->bRunPhysicsWithNoController = true; // NPCs are steered by the AI subsystem, never possessed
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 }

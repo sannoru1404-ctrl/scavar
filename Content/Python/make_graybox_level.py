@@ -21,13 +21,13 @@ PLANE = "/Engine/BasicShapes/Plane.Plane"
 def km_to_cm(x_km, y_km):
     return ((x_km - ORIGIN_KM[0] - 1.0) * 100000.0, (y_km - ORIGIN_KM[1] - 1.0) * 100000.0)
 
-actor_lib = unreal.EditorActorSubsystem()
-level_lib = unreal.EditorLevelLibrary
+actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 rng = random.Random(20011)
 
 
 def spawn(actor_class, location, rotation=unreal.Rotator(0, 0, 0), label=None):
-    actor = level_lib.spawn_actor_from_class(actor_class, unreal.Vector(*location), rotation)
+    actor = actor_subsystem.spawn_actor_from_class(actor_class, unreal.Vector(*location), rotation)
     if label:
         actor.set_actor_label(label)
     return actor
@@ -57,7 +57,7 @@ def spawn_building(name, centre, size_cm, usage, tier, building_id, points=5):
 def main():
     if unreal.EditorAssetLibrary.does_asset_exist(LEVEL_PATH):
         unreal.EditorAssetLibrary.delete_asset(LEVEL_PATH)
-    unreal.EditorLevelLibrary.new_level(LEVEL_PATH)
+    level_subsystem.new_level(LEVEL_PATH)
 
     # ground
     plane = unreal.EditorAssetLibrary.load_asset(PLANE)
@@ -68,7 +68,7 @@ def main():
     # lighting
     sun = spawn(unreal.DirectionalLight, (0, 0, 1000), unreal.Rotator(0, -45, 30), "Sun")
     sun.root_component.set_editor_property("mobility", unreal.ComponentMobility.MOVABLE)
-    sun.tags = [unreal.Name("Sun")]
+    sun.set_editor_property("tags", [unreal.Name("Sun")])
     spawn(unreal.SkyAtmosphere, (0, 0, 0), label="SkyAtmosphere")
     spawn(unreal.SkyLight, (0, 0, 500), label="SkyLight")
 
@@ -117,7 +117,7 @@ def main():
         spawn(unreal.PlayerStart, (x, y, 150), label=f"Spawn_{i}")
     spawn(unreal.PlayerStart, (farm[0] + 2500, farm[1], 150), label="Spawn_TestFarm")
 
-    unreal.EditorLoadingAndSavingUtils.save_current_level()
+    level_subsystem.save_current_level()
     unreal.log(f"Graybox level saved to {LEVEL_PATH}. Set it as GameDefaultMap in Project Settings > Maps & Modes.")
 
 

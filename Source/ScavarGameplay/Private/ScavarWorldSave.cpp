@@ -9,6 +9,7 @@
 #include "Engine/World.h"
 #include "HAL/FileManager.h"
 #include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Misc/Paths.h"
 #include <cstdio>
 #include <set>
@@ -59,16 +60,16 @@ bool UScavarWorldSave::InitializeWhenInventoryReady()
 	bOpened = true;
 
 	// Load must happen inside a transaction-free window: nothing else has touched the store yet (loot is gated on IsReady()).
-	Inventory->Execute([&](Scavar::ItemStore& S)
 	{
 		std::string LoadError;
-		if (!Database.LoadInto(S, &LoadError))
+		if (!Database.LoadInto(*Inventory->GetStoreForLoad(), &LoadError))
 		{
-			UE_LOG(LogScavarPersistence, Error, TEXT("Load failed: %s"), UTF8_TO_TCHAR(LoadError.c_str()));
-			return Scavar::Status::InvalidArgument;
+			UE_LOG(LogScavarPersistence, Error, TEXT("Load failed: %s. Running WITHOUT persistence."), UTF8_TO_TCHAR(LoadError.c_str()));
+			Database.Close();
+			bOpened = false;
+			return true;
 		}
-		return Scavar::Status::Ok;
-	});
+	}
 	Database.ListState("char:", &CachedCharacters, &Error);
 
 	// From now on every committed change goes to the database.

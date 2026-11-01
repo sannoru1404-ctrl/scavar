@@ -6,6 +6,7 @@
 #include "ScavarNPC.generated.h"
 
 class UScavarVitalsComponent;
+class UStaticMeshComponent;
 class UTextRenderComponent;
 
 /** Same order as Scavar::AiArchetype. */

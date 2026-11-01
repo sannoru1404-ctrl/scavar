@@ -10,6 +10,10 @@ public class ScavarPersistence : ModuleRules
 		bEnableExceptions = false;
 		bUseRTTI = false;
 		bUseUnity = false;
+		// Third-party C amalgamation and tested std-based code: do not turn their warnings into build breaks.
+		ShadowVariableWarningLevel = WarningLevel.Off;
+		UnsafeTypeCastWarningLevel = WarningLevel.Off;
+		bEnableUndefinedIdentifierWarnings = false;
 
 		// SQLite amalgamation (public domain) is vendored by tools/fetch_sqlite.ps1 into ThirdParty/sqlite.
 		string SqliteDir = Path.Combine(ModuleDirectory, "ThirdParty", "sqlite");

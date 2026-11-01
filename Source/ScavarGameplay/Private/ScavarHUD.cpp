@@ -8,7 +8,7 @@
 #include "ScavarWeaponComponent.h"
 #include "Engine/Canvas.h"
 
-void AScavarHUD::DrawLine(const FString& Text, const FLinearColor& Color)
+void AScavarHUD::DrawHudLine(const FString& Text, const FLinearColor& Color)
 {
 	DrawText(Text, Color, 24.f, Cursor, nullptr, 1.1f);
 	Cursor += 20.f;
@@ -29,7 +29,7 @@ void AScavarHUD::DrawHUD()
 	const FScavarVitalsSnapshot& V = Vitals->GetSnapshot();
 	if (Vitals->IsDead())
 	{
-		DrawLine(TEXT("YOU DIED - respawning..."), FLinearColor::Red);
+		DrawHudLine(TEXT("YOU DIED - respawning..."), FLinearColor::Red);
 		return;
 	}
 
@@ -41,9 +41,9 @@ void AScavarHUD::DrawHUD()
 		if (V.Bleed.IsValidIndex(Index) && V.Bleed[Index] == 2) { Flags += TEXT(" [HEAVY BLEED]"); }
 		if (V.Fracture.IsValidIndex(Index) && V.Fracture[Index]) { Flags += TEXT(" [fracture]"); }
 		const FLinearColor Color = V.ZoneHp[Index] < 20.f ? FLinearColor::Red : FLinearColor::White;
-		DrawLine(FString::Printf(TEXT("%-6s %5.0f%s"), ZoneNames[Index], V.ZoneHp[Index], *Flags), Color);
+		DrawHudLine(FString::Printf(TEXT("%-6s %5.0f%s"), ZoneNames[Index], V.ZoneHp[Index], *Flags), Color);
 	}
-	DrawLine(FString::Printf(TEXT("Food %3.0f  Water %3.0f  Stamina %3.0f  Warmth %3.0f"), V.Food, V.Water, V.Stamina, V.Warmth), FLinearColor::Yellow);
+	DrawHudLine(FString::Printf(TEXT("Food %3.0f  Water %3.0f  Stamina %3.0f  Warmth %3.0f"), V.Food, V.Water, V.Stamina, V.Warmth), FLinearColor::Yellow);
 
 	const FScavarWeaponView& W = Character->GetWeapon()->GetView();
 	if (W.bEquipped)
@@ -52,30 +52,30 @@ void AScavarHUD::DrawHUD()
 		FString Line = W.bMelee ? FString::Printf(TEXT("[%s]  LMB strike"), *W.WeaponId.ToString())
 		                        : FString::Printf(TEXT("[%s]  rounds %d%s  %s%s%s"), *W.WeaponId.ToString(), W.Rounds, W.bChambered ? TEXT(" (chambered)") : TEXT(""),
 		                                          *Mode, W.bJammed ? TEXT("  JAMMED") : TEXT(""), W.bBusy ? TEXT("  ...") : TEXT(""));
-		DrawLine(Line, W.bJammed ? FLinearColor::Red : FLinearColor(1.f, 0.6f, 0.1f));
+		DrawHudLine(Line, W.bJammed ? FLinearColor::Red : FLinearColor(1.f, 0.6f, 0.1f));
 	}
 	else
 	{
-		DrawLine(TEXT("No weapon in hand: press the number of a weapon item to take it."), FLinearColor::Gray);
+		DrawHudLine(TEXT("No weapon in hand: press the number of a weapon item to take it."), FLinearColor::Gray);
 	}
 
 	if (const AScavarGameState* State = GetWorld()->GetGameState<AScavarGameState>())
 	{
 		const float Hour = State->GetHourOfDay();
-		DrawLine(FString::Printf(TEXT("%02d:%02d  %s  %.0f C"), (int32)Hour, (int32)((Hour - (int32)Hour) * 60.f),
+		DrawHudLine(FString::Printf(TEXT("%02d:%02d  %s  %.0f C"), (int32)Hour, (int32)((Hour - (int32)Hour) * 60.f),
 			State->IsNight() ? TEXT("night") : TEXT("day"), State->GetAmbientTemperatureC()), FLinearColor(0.6f, 0.8f, 1.f));
 	}
 
 	const UScavarInventoryComponent* Inventory = Character->GetInventory();
 	if (Inventory)
 	{
-		DrawLine(FString::Printf(TEXT("Carried %.1f kg   [Tab] inventory  [1-9] use  [Alt+1-9] drop  [E] pick up"), Inventory->GetCarriedKg()), FLinearColor::Gray);
+		DrawHudLine(FString::Printf(TEXT("Carried %.1f kg   [Tab] inventory  [1-9] use  [Alt+1-9] drop  [E] pick up"), Inventory->GetCarriedKg()), FLinearColor::Gray);
 		if (PC->IsInventoryOpen())
 		{
 			int32 Number = 1;
 			for (const FScavarItemView& Item : Inventory->GetItems())
 			{
-				DrawLine(FString::Printf(TEXT("%d. %s x%d  (container %lld @ %d,%d)"), Number++, *Item.DefId.ToString(), Item.Qty, Item.ContainerId, Item.X, Item.Y), FLinearColor::Green);
+				DrawHudLine(FString::Printf(TEXT("%d. %s x%d  (container %lld @ %d,%d)"), Number++, *Item.DefId.ToString(), Item.Qty, Item.ContainerId, Item.X, Item.Y), FLinearColor::Green);
 			}
 		}
 	}

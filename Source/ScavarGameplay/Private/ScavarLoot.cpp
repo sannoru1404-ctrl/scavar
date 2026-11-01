@@ -4,6 +4,7 @@
 #include "ScavarWorldInventory.h"
 #include "ScavarWorldSave.h"
 #include "EngineUtils.h"
+#include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"

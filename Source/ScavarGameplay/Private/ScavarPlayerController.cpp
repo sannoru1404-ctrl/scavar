@@ -9,6 +9,7 @@
 #include "ScavarVitalsComponent.h"
 #include "ScavarWeaponComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/InputComponent.h"
 #include "Engine/World.h"
 
 namespace

@@ -14,6 +14,6 @@ public:
 	virtual void DrawHUD() override;
 
 private:
-	void DrawLine(const FString& Text, const FLinearColor& Color);
+	void DrawHudLine(const FString& Text, const FLinearColor& Color);
 	float Cursor = 0.f;
 };

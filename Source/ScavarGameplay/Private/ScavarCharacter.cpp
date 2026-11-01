@@ -9,6 +9,8 @@
 #include "ScavarLog.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/InputComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -38,7 +40,7 @@ AScavarCharacter::AScavarCharacter()
 void AScavarCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AScavarCharacter, bWantsSprint);
+	DOREPLIFETIME_CONDITION(AScavarCharacter, bWantsSprint, COND_SkipOwner); // the owner predicts it locally
 }
 
 void AScavarCharacter::BeginPlay()

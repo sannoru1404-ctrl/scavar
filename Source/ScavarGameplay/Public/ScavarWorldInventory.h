@@ -27,6 +27,8 @@ public:
 	const Scavar::ItemTable& GetTable() const { return Table; }
 	const Scavar::GameData& GetGameData() const { return *GameData; }
 	const Scavar::ItemStore* GetStore() const { return Store.Get(); }
+	/** Only for the save loader at startup: loading replaces the whole store and must not run inside Execute(). */
+	Scavar::ItemStore* GetStoreForLoad() { return Store.Get(); }
 
 	/** Runs Op inside a transaction; rolls back and returns the error if Op fails. Server only. */
 	Scavar::Status Execute(TFunctionRef<Scavar::Status(Scavar::ItemStore&)> Op);

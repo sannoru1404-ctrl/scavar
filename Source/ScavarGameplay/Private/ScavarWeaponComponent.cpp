@@ -167,6 +167,7 @@ bool UScavarWeaponComponent::Equip(int64 ItemId)
 			const Scavar::Status St = Inv->Execute([&](Scavar::ItemStore& S)
 			{
 				Scavar::Container C;
+				C.Owner = UScavarWorldInventory::HashAccountKey(Owned->GetAccountKey());
 				C.Kind = Scavar::ContainerKind::Magwell;
 				C.W = 1;
 				C.H = 1;
@@ -202,6 +203,7 @@ bool UScavarWeaponComponent::Holster()
 	{
 		const Scavar::ContainerId Bag = Owned->GetBackpackId();
 		const Scavar::ContainerId Pockets = Owned->GetPocketsId();
+		const Scavar::WeaponState Saved = State; // the store rolls back on failure, so the weapon state must too (no vanishing rounds)
 		const Scavar::Status St = Inv->Execute([&](Scavar::ItemStore& S)
 		{
 			Scavar::Status R = Scavar::UnloadWeaponRounds(State, S, Inv->GetGameData(), Bag) == Scavar::WeaponStatus::Ok ? Scavar::Status::Ok : Scavar::Status::NoSpace;
@@ -217,6 +219,7 @@ bool UScavarWeaponComponent::Holster()
 		});
 		if (St != Scavar::Status::Ok)
 		{
+			State = Saved;
 			Notify(TEXT("No room to put the weapon away. Free some space."));
 			return false;
 		}
@@ -473,7 +476,7 @@ void UScavarWeaponComponent::FireProjectile(const FVector& Origin, const FVector
 		{
 			FCollisionQueryParams Params(SCENE_QUERY_STAT(ScavarBullet), true);
 			Params.AddIgnoredActors(Ignored);
-			if (!World->LineTraceSingleByObjectType(Hit, Previous, Next, FCollisionObjectQueryParams::AllObjects, Params))
+			if (!World->LineTraceSingleByObjectType(Hit, Previous, Next, FCollisionObjectQueryParams(FCollisionObjectQueryParams::AllObjects), Params))
 			{
 				break;
 			}

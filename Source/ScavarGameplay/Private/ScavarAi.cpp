@@ -343,6 +343,19 @@ void UScavarAiSubsystem::TickNpcs(float Dt, double Now)
 		{
 			Npc->ClearMoveGoal();
 		}
+
+		// Predators without a ranged attack (CanShoot == false) only receive MoveTo from the brain; the bite is applied here.
+		const Scavar::ArchetypeDef& Def = Scavar::ArchetypeFor(Npc->Brain().Arch);
+		if (!Def.CanShoot && Npc->Brain().State == Scavar::AiState::Engage && Npc->Brain().FocusTarget != 0 && Npc->Brain().FireCooldown <= 0.0)
+		{
+			const AActor* Focus = FindPlayerPawn(Npc->Brain().FocusTarget);
+			const FNpcAttackProfile Bite = AttackProfileFor(Npc->Brain().Arch);
+			if (Focus && FVector::Dist(Focus->GetActorLocation(), Npc->GetActorLocation()) <= Bite.RangeCm)
+			{
+				ApplyNpcAttack(*Npc, Npc->Brain().FocusTarget);
+				Npc->Brain().FireCooldown = Bite.CooldownSeconds;
+			}
+		}
 	}
 }
 
