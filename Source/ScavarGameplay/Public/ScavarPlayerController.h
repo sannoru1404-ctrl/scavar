@@ -33,6 +33,11 @@ protected:
 	UFUNCTION(Server, Reliable) void ServerHeal();
 	UFUNCTION(Server, Reliable) void ServerLootCycle();
 
+	void FirePressed();
+	void FireReleased();
+	void ReloadPressed();
+	void FireModePressed();
+	void HolsterPressed();
 	void InteractPressed();
 	void ToggleInventory();
 	void SlotPressed(int32 SlotIndex);

@@ -4,6 +4,7 @@
 #include "ScavarPickup.h"
 #include "ScavarPlayerController.h"
 #include "ScavarVitalsComponent.h"
+#include "ScavarWeaponComponent.h"
 #include "Engine/Canvas.h"
 
 void AScavarHUD::DrawLine(const FString& Text, const FLinearColor& Color)
@@ -42,6 +43,20 @@ void AScavarHUD::DrawHUD()
 		DrawLine(FString::Printf(TEXT("%-6s %5.0f%s"), ZoneNames[Index], V.ZoneHp[Index], *Flags), Color);
 	}
 	DrawLine(FString::Printf(TEXT("Food %3.0f  Water %3.0f  Stamina %3.0f  Warmth %3.0f"), V.Food, V.Water, V.Stamina, V.Warmth), FLinearColor::Yellow);
+
+	const FScavarWeaponView& W = Character->GetWeapon()->GetView();
+	if (W.bEquipped)
+	{
+		const FString Mode = W.Mode == 1 ? TEXT("AUTO") : TEXT("SEMI");
+		FString Line = W.bMelee ? FString::Printf(TEXT("[%s]  LMB strike"), *W.WeaponId.ToString())
+		                        : FString::Printf(TEXT("[%s]  rounds %d%s  %s%s%s"), *W.WeaponId.ToString(), W.Rounds, W.bChambered ? TEXT(" (chambered)") : TEXT(""),
+		                                          *Mode, W.bJammed ? TEXT("  JAMMED") : TEXT(""), W.bBusy ? TEXT("  ...") : TEXT(""));
+		DrawLine(Line, W.bJammed ? FLinearColor::Red : FLinearColor(1.f, 0.6f, 0.1f));
+	}
+	else
+	{
+		DrawLine(TEXT("No weapon in hand: press the number of a weapon item to take it."), FLinearColor::Gray);
+	}
 
 	const UScavarInventoryComponent* Inventory = Character->GetInventory();
 	if (Inventory)

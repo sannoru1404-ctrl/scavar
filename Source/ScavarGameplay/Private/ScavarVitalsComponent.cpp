@@ -68,6 +68,10 @@ bool UScavarVitalsComponent::ApplyProjectileHit(EScavarHitZone Zone, float Damag
 	UE_LOG(LogScavarCombat, Verbose, TEXT("%s hit zone %d: dealt %.1f penetrated=%d blunt=%d killed=%d"),
 		*GetOwner()->GetName(), (int32)Zone, Result.DamageDealt, Result.Penetrated, Result.Blunt, Result.Killed);
 
+	if (Result.ArmorWear > 0.f)
+	{
+		OnArmorWorn.Broadcast(Armor);
+	}
 	if (bTreating)
 	{
 		Scavar::InterruptTreatment(Treatment, Scavar::TreatmentInterrupt::DamageTaken);

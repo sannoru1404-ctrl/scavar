@@ -16,13 +16,14 @@ const char* ContainerKindName(ContainerKind k)
     case ContainerKind::World: return "world";
     case ContainerKind::Corpse: return "corpse";
     case ContainerKind::Ground: return "ground";
+    case ContainerKind::Magwell: return "magwell";
     }
     return "ground";
 }
 
 bool ParseContainerKind(const std::string& s, ContainerKind* out)
 {
-    for (int i = 0; i <= static_cast<int>(ContainerKind::Ground); ++i)
+    for (int i = 0; i <= static_cast<int>(ContainerKind::Magwell); ++i)
         if (s == ContainerKindName(static_cast<ContainerKind>(i))) { *out = static_cast<ContainerKind>(i); return true; }
     return false;
 }

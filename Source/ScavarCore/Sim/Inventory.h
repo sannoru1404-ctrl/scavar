@@ -11,7 +11,7 @@
 
 namespace Scavar
 {
-enum class ContainerKind : uint8_t { Pockets = 0, Vest, Backpack, Secure, Stash, Returns, World, Corpse, Ground };
+enum class ContainerKind : uint8_t { Pockets = 0, Vest, Backpack, Secure, Stash, Returns, World, Corpse, Ground, Magwell };
 const char* ContainerKindName(ContainerKind kind);
 bool ParseContainerKind(const std::string& name, ContainerKind* out);
 

@@ -1,6 +1,7 @@
 #include "ScavarInventoryComponent.h"
 #include "ScavarPickup.h"
 #include "ScavarVitalsComponent.h"
+#include "ScavarWeaponComponent.h"
 #include "ScavarWorldInventory.h"
 #include "ScavarLog.h"
 #include "Engine/World.h"
@@ -77,6 +78,11 @@ UScavarVitalsComponent* UScavarInventoryComponent::Vitals() const
 	return GetOwner() ? GetOwner()->FindComponentByClass<UScavarVitalsComponent>() : nullptr;
 }
 
+UScavarWeaponComponent* UScavarInventoryComponent::Weapon() const
+{
+	return GetOwner() ? GetOwner()->FindComponentByClass<UScavarWeaponComponent>() : nullptr;
+}
+
 FVector UScavarInventoryComponent::FeetLocation() const
 {
 	const AActor* Owner = GetOwner();
@@ -85,7 +91,7 @@ FVector UScavarInventoryComponent::FeetLocation() const
 
 bool UScavarInventoryComponent::Owns(Scavar::ContainerId Id) const
 {
-	return Id != 0 && (Id == Pockets || Id == Backpack || Id == Secure);
+	return Id != 0 && (Id == Pockets || Id == Backpack || Id == Secure || Id == Worn);
 }
 
 void UScavarInventoryComponent::InitializeForPlayer(const FString& InAccountKey, bool bGiveStarterKit)
@@ -110,6 +116,9 @@ void UScavarInventoryComponent::InitializeForPlayer(const FString& InAccountKey,
 		C.Kind = Scavar::ContainerKind::Secure; C.W = 2; C.H = 2;
 		St = S.AddContainer(C, &Secure);
 		if (St != Scavar::Status::Ok) { return St; }
+		C.Kind = Scavar::ContainerKind::Vest; C.W = 4; C.H = 4; // "worn gear": helmet and vest in use
+		St = S.AddContainer(C, &Worn);
+		if (St != Scavar::Status::Ok) { return St; }
 
 		// Items rescued from the previous life's secure pocket come back first (docs/03 section 2, pilot: no hub, so automatically).
 		const std::vector<Scavar::ItemId> Waiting = S.ItemsIn(Returns);
@@ -133,6 +142,7 @@ void UScavarInventoryComponent::InitializeForPlayer(const FString& InAccountKey,
 	if (UScavarVitalsComponent* V = Vitals())
 	{
 		V->OnTreatmentFinished.AddUObject(this, &UScavarInventoryComponent::OnTreatmentFinished);
+		V->OnArmorWorn.AddUObject(this, &UScavarInventoryComponent::OnArmorWorn);
 	}
 	RefreshView();
 }
@@ -162,16 +172,17 @@ void UScavarInventoryComponent::HandleOwnerDied()
 		return;
 	}
 
+	if (UScavarWeaponComponent* W = Weapon()) { W->ReleaseOnDeath(); }
 	const FVector Origin = FeetLocation();
 	struct FDrop { Scavar::ItemId Item; Scavar::ContainerId Ground; };
 	TArray<FDrop> Drops;
 
 	Inventory->Execute([&](Scavar::ItemStore& S)
 	{
-		Scavar::Status St = S.ResolveDeath(Secure, Returns, {Pockets, Backpack});
+		Scavar::Status St = S.ResolveDeath(Secure, Returns, {Pockets, Backpack, Worn});
 		if (St != Scavar::Status::Ok) { return St; }
 		// Everything left on the body becomes loose items around the corpse (pilot simplification of corpse looting).
-		for (const Scavar::ContainerId Body : {Pockets, Backpack})
+		for (const Scavar::ContainerId Body : {Pockets, Backpack, Worn})
 		{
 			const std::vector<Scavar::ItemId> Contents = S.ItemsIn(Body);
 			for (const Scavar::ItemId Id : Contents)
@@ -201,7 +212,8 @@ void UScavarInventoryComponent::HandleOwnerDied()
 		const FVector Offset(FMath::Cos(Angle) * 60.f, FMath::Sin(Angle) * 60.f, 8.f);
 		Inventory->AttachPickup(Drop.Item, Drop.Ground, Origin + Offset);
 	}
-	Pockets = Backpack = Secure = 0;
+	Pockets = Backpack = Secure = Worn = 0;
+	WornHelmetItem = WornVestItem = 0;
 	Inventory->OnChanged.Remove(ChangedHandle);
 	bInitialized = false;
 	Items.Reset();
@@ -270,6 +282,14 @@ void UScavarInventoryComponent::ServerDropItem_Implementation(int64 ItemId)
 	{
 		return;
 	}
+	if (UScavarWeaponComponent* W = Weapon(); W && W->GetEquippedItem() == ItemId && !W->Holster())
+	{
+		return; // cannot drop a weapon that cannot be unloaded first
+	}
+	if (Item->Container == Worn)
+	{
+		return; // take it off first (use it)
+	}
 	const Scavar::ContainerId Src = Item->Container;
 	Scavar::ContainerId Ground = 0;
 	const Scavar::Status Result = Inventory->Execute([&](Scavar::ItemStore& S)
@@ -298,6 +318,17 @@ void UScavarInventoryComponent::ServerUseItem_Implementation(int64 ItemId)
 	const Scavar::ItemInstance* Item = Inventory->GetStore()->GetItem(ItemId);
 	if (!Item || !Owns(Item->Container))
 	{
+		return;
+	}
+	const Scavar::ItemRow* UsedRow = Inventory->GetTable().Find(Item->DefId);
+	if (UsedRow && UsedRow->Category == "weapon")
+	{
+		if (UScavarWeaponComponent* W = Weapon()) { W->Equip(ItemId); }
+		return;
+	}
+	if (UsedRow && UsedRow->Category == "armor")
+	{
+		ToggleArmor(ItemId);
 		return;
 	}
 	const Scavar::ConsumableEffect* Effect = Inventory->GetTable().FindConsumable(Item->DefId);
@@ -344,6 +375,7 @@ void UScavarInventoryComponent::HandleStoreChanged(const Scavar::ChangeSet& Chan
 {
 	if (bInitialized && !Changes.Empty())
 	{
+		RebuildArmor();
 		RefreshView();
 	}
 }
@@ -359,7 +391,7 @@ void UScavarInventoryComponent::RefreshView()
 	TArray<FScavarItemView> NewItems;
 	TArray<FScavarContainerView> NewContainers;
 	float Kg = 0.f;
-	for (const Scavar::ContainerId Id : {Pockets, Backpack, Secure})
+	for (const Scavar::ContainerId Id : {Pockets, Backpack, Worn, Secure})
 	{
 		const Scavar::Container* C = Store.GetContainer(Id);
 		if (!C) { continue; }
@@ -405,4 +437,95 @@ void UScavarInventoryComponent::ClientNotify_Implementation(const FString& Messa
 			PC->ClientMessage(Message);
 		}
 	}
+}
+
+bool UScavarInventoryComponent::ToggleArmor(int64 ItemId)
+{
+	UScavarWorldInventory* Inventory = World();
+	if (!Inventory || !bInitialized || !Inventory->GetStore())
+	{
+		return false;
+	}
+	const Scavar::ItemInstance* Item = Inventory->GetStore()->GetItem(ItemId);
+	const Scavar::ArmorDef* Def = Item ? Inventory->GetGameData().FindArmor(Item->DefId) : nullptr;
+	if (!Def || !Owns(Item->Container))
+	{
+		return false;
+	}
+
+	const Scavar::ContainerId From = Item->Container;
+	const Scavar::Status Result = Inventory->Execute([&](Scavar::ItemStore& S)
+	{
+		if (From == Worn)
+		{
+			Scavar::Status St = S.AutoMove(ItemId, Backpack, true, Worn);
+			return St != Scavar::Status::Ok ? S.AutoMove(ItemId, Pockets, true, Worn) : St;
+		}
+		// Swap out whatever is worn in the same slot first.
+		const std::vector<Scavar::ItemId> Current = S.ItemsIn(Worn);
+		for (const Scavar::ItemId Other : Current)
+		{
+			const Scavar::ItemInstance* OtherItem = S.GetItem(Other);
+			const Scavar::ArmorDef* OtherDef = OtherItem ? Inventory->GetGameData().FindArmor(OtherItem->DefId) : nullptr;
+			if (OtherDef && OtherDef->Slot == Def->Slot)
+			{
+				Scavar::Status St = S.AutoMove(Other, Backpack, true, Worn);
+				if (St != Scavar::Status::Ok) { St = S.AutoMove(Other, Pockets, true, Worn); }
+				if (St != Scavar::Status::Ok) { return St; }
+			}
+		}
+		return S.AutoMove(ItemId, Worn, false, From);
+	});
+	if (Result != Scavar::Status::Ok)
+	{
+		ClientNotify(TEXT("No room to change armor."));
+		return false;
+	}
+	return true;
+}
+
+void UScavarInventoryComponent::RebuildArmor()
+{
+	UScavarWorldInventory* Inventory = World();
+	UScavarVitalsComponent* V = Vitals();
+	if (!Inventory || !V || !Inventory->GetStore() || Worn == 0)
+	{
+		return;
+	}
+	Scavar::ArmorLoadout Loadout;
+	WornHelmetItem = WornVestItem = 0;
+	for (const Scavar::ItemId Id : Inventory->GetStore()->ItemsIn(Worn))
+	{
+		const Scavar::ItemInstance* It = Inventory->GetStore()->GetItem(Id);
+		const Scavar::ArmorDef* Def = It ? Inventory->GetGameData().FindArmor(It->DefId) : nullptr;
+		if (!Def) { continue; }
+		Scavar::ArmorPiece Piece = Scavar::MakeArmorPiece(*Def);
+		Piece.Durability = Def->Durability * FMath::Clamp(It->Durability, 0.f, 100.f) / 100.f;
+		if (Def->Slot == "helmet") { Loadout.Helmet = Piece; WornHelmetItem = Id; }
+		else if (Def->Slot == "vest") { Loadout.Vest = Piece; WornVestItem = Id; }
+	}
+	V->SetArmor(Loadout);
+}
+
+void UScavarInventoryComponent::OnArmorWorn(const Scavar::ArmorLoadout& Loadout)
+{
+	UScavarWorldInventory* Inventory = World();
+	if (!Inventory || !Inventory->GetStore())
+	{
+		return;
+	}
+	const int64 Helmet = WornHelmetItem;
+	const int64 Vest = WornVestItem;
+	Inventory->Execute([&](Scavar::ItemStore& S)
+	{
+		if (Helmet != 0 && Loadout.Helmet.MaxDurability > 0.f)
+		{
+			S.SetDurability(Helmet, 100.f * Loadout.Helmet.Durability / Loadout.Helmet.MaxDurability);
+		}
+		if (Vest != 0 && Loadout.Vest.MaxDurability > 0.f)
+		{
+			S.SetDurability(Vest, 100.f * Loadout.Vest.Durability / Loadout.Vest.MaxDurability);
+		}
+		return Scavar::Status::Ok;
+	});
 }

@@ -1,6 +1,7 @@
 #include "ScavarCharacter.h"
 #include "ScavarVitalsComponent.h"
 #include "ScavarInventoryComponent.h"
+#include "ScavarWeaponComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
@@ -23,6 +24,7 @@ AScavarCharacter::AScavarCharacter()
 
 	Vitals = CreateDefaultSubobject<UScavarVitalsComponent>(TEXT("Vitals"));
 	Inventory = CreateDefaultSubobject<UScavarInventoryComponent>(TEXT("Inventory"));
+	Weapon = CreateDefaultSubobject<UScavarWeaponComponent>(TEXT("Weapon"));
 
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -132,6 +134,10 @@ void AScavarCharacter::Tick(float DeltaSeconds)
 			Mode = (bWantsSprint && Vitals->CanSprint()) ? Scavar::MoveMode::Sprint : Scavar::MoveMode::Jog;
 		}
 		Vitals->SetMoveMode(Mode);
+		if (Mode == Scavar::MoveMode::Sprint)
+		{
+			Weapon->CancelPendingAction(); // sprinting interrupts reloads and jam clearing
+		}
 	}
 }
 

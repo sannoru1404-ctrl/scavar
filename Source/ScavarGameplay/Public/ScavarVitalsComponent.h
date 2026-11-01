@@ -49,6 +49,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FScavarVitalsChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FScavarDied, AActor*, Victim);
 /** Fired on the server when a timed treatment ends; bCompleted == false means it was interrupted and no resource may be consumed. */
 DECLARE_MULTICAST_DELEGATE_OneParam(FScavarTreatmentFinished, bool /*bCompleted*/);
+/** Fired on the server after armor lost durability, so the inventory can persist the wear on the item. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FScavarArmorWorn, const Scavar::ArmorLoadout&);
 
 /**
  * Health, armor, hunger/thirst/cold and stamina. The server owns all state and runs the engine-agnostic Scavar::Sim code;
@@ -99,6 +101,7 @@ public:
 	const FScavarVitalsSnapshot& GetSnapshot() const { return OwnerSnapshot; }
 
 	FScavarTreatmentFinished OnTreatmentFinished;
+	FScavarArmorWorn OnArmorWorn;
 	UPROPERTY(BlueprintAssignable, Category = "Scavar|Vitals") FScavarVitalsChanged OnVitalsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Scavar|Vitals") FScavarDied OnDied;
 

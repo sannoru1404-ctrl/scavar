@@ -8,6 +8,7 @@
 class AScavarPickup;
 class UScavarWorldInventory;
 class UScavarVitalsComponent;
+class UScavarWeaponComponent;
 
 USTRUCT(BlueprintType)
 struct FScavarItemView
@@ -66,6 +67,10 @@ public:
 	const TArray<FScavarItemView>& GetItems() const { return Items; }
 	const TArray<FScavarContainerView>& GetContainers() const { return Containers; }
 	float GetCarriedKg() const { return CarriedKg; }
+	bool OwnsContainer(Scavar::ContainerId Id) const { return Owns(Id); }
+	Scavar::ContainerId GetPocketsId() const { return Pockets; }
+	Scavar::ContainerId GetBackpackId() const { return Backpack; }
+	Scavar::ContainerId GetWornId() const { return Worn; }
 
 	FSimpleMulticastDelegate OnInventoryChanged;
 
@@ -76,6 +81,10 @@ private:
 	bool Owns(Scavar::ContainerId Id) const;
 	UScavarWorldInventory* World() const;
 	UScavarVitalsComponent* Vitals() const;
+	UScavarWeaponComponent* Weapon() const;
+	bool ToggleArmor(int64 ItemId);
+	void RebuildArmor();
+	void OnArmorWorn(const Scavar::ArmorLoadout& Loadout);
 	FVector FeetLocation() const;
 	void HandleStoreChanged(const Scavar::ChangeSet& Changes);
 	void RefreshView();
@@ -87,7 +96,8 @@ private:
 
 	// Server-only.
 	FString AccountKey;
-	Scavar::ContainerId Pockets = 0, Backpack = 0, Secure = 0, Stash = 0, Returns = 0;
+	Scavar::ContainerId Pockets = 0, Backpack = 0, Secure = 0, Worn = 0, Stash = 0, Returns = 0;
+	int64 WornHelmetItem = 0, WornVestItem = 0;
 	FDelegateHandle ChangedHandle;
 	int64 PendingTreatmentItem = 0;
 	bool bInitialized = false;

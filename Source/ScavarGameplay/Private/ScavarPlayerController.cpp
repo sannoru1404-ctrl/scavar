@@ -6,6 +6,7 @@
 #include "ScavarLog.h"
 #include "ScavarPickup.h"
 #include "ScavarVitalsComponent.h"
+#include "ScavarWeaponComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/World.h"
 
@@ -17,6 +18,11 @@ constexpr float InteractReachCm = 300.f;
 void AScavarPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
+	InputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &AScavarPlayerController::FirePressed);
+	InputComponent->BindAction(TEXT("Fire"), IE_Released, this, &AScavarPlayerController::FireReleased);
+	InputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AScavarPlayerController::ReloadPressed);
+	InputComponent->BindAction(TEXT("FireMode"), IE_Pressed, this, &AScavarPlayerController::FireModePressed);
+	InputComponent->BindAction(TEXT("Holster"), IE_Pressed, this, &AScavarPlayerController::HolsterPressed);
 	InputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &AScavarPlayerController::InteractPressed);
 	InputComponent->BindAction(TEXT("Inventory"), IE_Pressed, this, &AScavarPlayerController::ToggleInventory);
 	InputComponent->BindAction(TEXT("DropModifier"), IE_Pressed, this, &AScavarPlayerController::DropModifierPressed);
@@ -49,6 +55,31 @@ AScavarPickup* AScavarPlayerController::FindLookedAtPickup() const
 		return Cast<AScavarPickup>(Hit.GetActor());
 	}
 	return nullptr;
+}
+
+void AScavarPlayerController::FirePressed()
+{
+	if (const AScavarCharacter* Character = Cast<AScavarCharacter>(GetPawn())) { Character->GetWeapon()->ServerTrigger(true); }
+}
+
+void AScavarPlayerController::FireReleased()
+{
+	if (const AScavarCharacter* Character = Cast<AScavarCharacter>(GetPawn())) { Character->GetWeapon()->ServerTrigger(false); }
+}
+
+void AScavarPlayerController::ReloadPressed()
+{
+	if (const AScavarCharacter* Character = Cast<AScavarCharacter>(GetPawn())) { Character->GetWeapon()->ServerReload(); }
+}
+
+void AScavarPlayerController::FireModePressed()
+{
+	if (const AScavarCharacter* Character = Cast<AScavarCharacter>(GetPawn())) { Character->GetWeapon()->ServerToggleFireMode(); }
+}
+
+void AScavarPlayerController::HolsterPressed()
+{
+	if (const AScavarCharacter* Character = Cast<AScavarCharacter>(GetPawn())) { Character->GetWeapon()->ServerHolster(); }
 }
 
 void AScavarPlayerController::InteractPressed()
