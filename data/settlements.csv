@@ -1,0 +1,15 @@
+settlement_id,name_ru,kind,x_km,y_km,risk_tier,release,function_ru
+SET_BEREZOVETS,Березовец,city,4.80,3.30,R0,alpha,"город, власть/рынок/больница/главная станция"
+SET_RADICHI,Радичи,village,2.10,2.00,R1,slice,"село, фермы/зерно"
+SET_OLSHANKA,Ольшанка,village,8.00,1.70,R1,ea,лесохозяйственный посёлок
+SET_SUKHAYA_GAR,Сухая Гарь,village,2.00,6.60,R2,ea,рабочий посёлок торфа
+SET_NIZHNIE_LUGI,Нижние Луги,village,7.70,6.90,R1,ea,речное село/переправа
+SET_KAMENKA,Каменка,village,5.20,7.60,R1,ea,железнодорожный рабочий посёлок
+HUT_01,Хутор 01,hamlet,2.47,1.27,R1,slice,жилая группа
+HUT_02,Хутор 02,hamlet,3.64,2.14,R1,alpha,жилая группа
+HUT_03,Хутор 03,hamlet,4.81,3.01,R1,alpha,жилая группа
+HUT_04,Хутор 04,hamlet,5.98,3.88,R1,alpha,жилая группа
+HUT_05,Хутор 05,hamlet,7.15,4.75,R1,ea,жилая группа
+HUT_06,Хутор 06,hamlet,8.32,5.62,R1,ea,жилая группа
+HUT_07,Хутор 07,hamlet,9.49,6.49,R1,ea,жилая группа
+HUT_08,Хутор 08,hamlet,1.46,7.36,R1,ea,жилая группа

@@ -1,0 +1,6 @@
+armor_id,name_ru,slot,armor_class,zones,durability,weight_kg,rarity,release,notes
+GEAR_HELM_TANK,Танковый шлемофон,helmet,1,head,30,0.4,common,slice,Минимальная защита; от ударов и падений
+GEAR_HELM_SSH68,Стальной шлем СШ-68,helmet,2,head,50,1.3,uncommon,alpha,
+GEAR_VEST_ZH81,Бронежилет Ж-81,vest,2,torso,60,3.0,uncommon,alpha,
+GEAR_VEST_6B3,Бронежилет 6Б3ТМ,vest,3,torso,80,5.5,rare,alpha,
+GEAR_VEST_6B5,Бронежилет 6Б5 с плитами,vest,4,torso,100,9.0,very_rare,alpha,R3-R4 лут и награды высокого ранга

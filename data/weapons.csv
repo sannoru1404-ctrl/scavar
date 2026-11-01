@@ -1,0 +1,17 @@
+weapon_id,name_ru,class,caliber,mag_size,fire_modes,rpm,effective_range_m,rarity,release,notes
+W_PM,ПМ,pistol,9x18,8,semi,360,50,common,slice,Стартовый пистолет
+W_TT33,ТТ-33,pistol,7.62x25,8,semi,360,60,uncommon,alpha,
+W_TOZ34,ТОЗ-34,shotgun,12x70,2,single,120,40,common,slice,Двуствольное вертикальное; перезарядка поштучно
+W_IZH27,ИЖ-27,shotgun,12x70,2,single,120,40,common,alpha,Двуствольное горизонтальное
+W_OBREZ,Обрез,shotgun,12x70,2,single,90,25,common,alpha,Крафт из ружья; без приклада — большой разброс
+W_MOSIN,Мосин 91/30,rifle,7.62x54R,5,bolt,20,400,common,slice,Основная винтовка ранней игры
+W_SKS,СКС,rifle,7.62x39,10,semi,300,300,uncommon,alpha,
+W_HUNT762,Охотничий карабин 7.62×39,rifle,7.62x39,5,semi,240,250,uncommon,alpha,
+W_AKM,АКМ,assault,7.62x39,30,semi|auto,600,300,uncommon,alpha,
+W_AK74,АК-74,assault,5.45x39,30,semi|auto,650,350,rare,alpha,
+W_AKS74U,АКС-74У,assault,5.45x39,30,semi|auto,700,150,rare,alpha,
+W_SVD,СВД,dmr,7.62x54R,10,semi,240,600,very_rare,alpha,Штатный оптический прицел; только R3-R4
+W_RIM22,Малокалиберная винтовка,rifle,22LR,10,semi,200,150,common,slice,Гражданская; охота
+M_KNIFE,Нож,melee,none,0,single,0,2,common,slice,Разделка и ближний бой
+M_AXE,Топор,melee,none,0,single,0,2,common,alpha,Дрова и ближний бой
+G_RGD5,РГД-5,throwable,none,0,single,0,30,rare,alpha,Осколочная; время запала 3.5 с

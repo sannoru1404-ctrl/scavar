@@ -1,0 +1,16 @@
+name: sim-tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libsqlite3-dev
+      - name: Build and run simulation tests (ASan + UBSan) and fault injection
+        run: tools/run_sim_tests.sh

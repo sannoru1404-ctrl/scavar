@@ -1,0 +1,11 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "SCAVAR: Starorechye 2001 - persistent PvPvE survival shooter",
+	"Modules": [
+		{ "Name": "ScavarCore", "Type": "Runtime", "LoadingPhase": "Default" },
+		{ "Name": "ScavarPersistence", "Type": "Runtime", "LoadingPhase": "Default" },
+		{ "Name": "ScavarGameplay", "Type": "Runtime", "LoadingPhase": "Default" }
+	]
+}

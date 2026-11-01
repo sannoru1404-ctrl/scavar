@@ -1,0 +1,33 @@
+# Unreal Engine generated
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+.vscode/
+.idea/
+*.sln
+*.suo
+*.VC.db
+*.opensdf
+*.sdf
+*.xcodeproj
+*.xcworkspace
+
+# Packaging and local server state
+Packaged/
+Staged/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Secrets and local configuration
+.env
+*.pem
+ServerConfig.ini
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

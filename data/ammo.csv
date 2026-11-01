@@ -1,0 +1,13 @@
+ammo_id,caliber,name_ru,damage,pen_tier,muzzle_velocity_mps,pellets,rarity,release,notes
+A_918_FMJ,9x18,9×18 ПМ ПС,28,1,315,1,common,slice,Базовый пистолетный патрон
+A_918_AP,9x18,9×18 ПМ бронебойный,25,2,330,1,uncommon,alpha,
+A_76225_FMJ,7.62x25,7.62×25 ТТ П,30,2,420,1,uncommon,alpha,
+A_12_BUCK,12x70,12/70 картечь,14,1,380,8,common,slice,Урон указан на одну картечину
+A_12_SLUG,12x70,12/70 пуля,85,2,420,1,uncommon,alpha,
+A_762R_FMJ,7.62x54R,7.62×54R ЛПС,75,4,810,1,uncommon,slice,
+A_762R_AP,7.62x54R,7.62×54R Б-32,70,5,800,1,rare,alpha,
+A_76239_PS,7.62x39,7.62×39 ПС,55,3,720,1,uncommon,alpha,
+A_76239_BP,7.62x39,7.62×39 БП,52,4,730,1,rare,alpha,
+A_545_PS,5.45x39,5.45×39 ПС,45,3,890,1,uncommon,alpha,
+A_545_BS,5.45x39,5.45×39 БС,42,4,900,1,rare,alpha,
+A_22_LR,22LR,.22 LR,18,1,330,1,common,slice,Охота и обучение; слабый против брони
